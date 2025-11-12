@@ -321,7 +321,7 @@
             id: 'municipalities-outline',
             label: 'Municipalities',
             category: 'Boundaries',
-            relatedLayers: ['municipalities-labels'] // Layers that should toggle together
+            relatedLayers: [] // Layers that should toggle together
         }
         // Add more overlays here as needed
         // Example:
@@ -578,28 +578,7 @@
             filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
         }, firstSymbolId);
 
-        // Add municipalities label layer
-        map.addLayer({
-            id: 'municipalities-labels',
-            type: 'symbol',
-            source: 'municipalities-source',
-            layout: {
-                'text-field': ['get', 'CITY_NAME'],
-                'text-font': ['Roboto Regular', 'Arial Unicode MS Regular'],
-                'text-size': 12,
-                'text-anchor': 'center',
-                'text-offset': [0, 0],
-                visibility: 'none'
-            },
-            paint: {
-                'text-color': '#000000',
-                'text-halo-color': '#FFFFFF',
-                'text-halo-width': 2
-            },
-            filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
-        });
-
-        console.log('Added municipalities overlay layers');
+        console.log('Added municipalities overlay layer');
 
         // Initialize overlay UI based on count
         initializeOverlays();
@@ -1219,7 +1198,7 @@
         const savedLayerState = currentDataLayer;
 
         // Capture visible overlay states before switching
-        const overlayLayers = ['municipalities-outline', 'municipalities-labels'];
+        const overlayLayers = ['municipalities-outline'];
         const visibleOverlays = overlayLayers.filter(id => {
             const layer = map.getLayer(id);
             return layer && map.getLayoutProperty(id, 'visibility') === 'visible';
@@ -1375,27 +1354,7 @@
                 filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
             }, firstSymbolId);
 
-            map.addLayer({
-                id: 'municipalities-labels',
-                type: 'symbol',
-                source: 'municipalities-source',
-                layout: {
-                    'text-field': ['get', 'CITY_NAME'],
-                    'text-font': ['Roboto Regular', 'Arial Unicode MS Regular'],
-                    'text-size': 12,
-                    'text-anchor': 'center',
-                    'text-offset': [0, 0],
-                    visibility: 'none'
-                },
-                paint: {
-                    'text-color': '#000000',
-                    'text-halo-color': '#FFFFFF',
-                    'text-halo-width': 2
-                },
-                filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
-            });
-
-            console.log('Re-added overlay layers');
+            console.log('Re-added overlay layer');
 
             // Re-initialize overlay UI
             initializeOverlays();
