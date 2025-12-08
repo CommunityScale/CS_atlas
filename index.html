@@ -1951,13 +1951,6 @@
             }
         }
 
-        // Get county range if available
-        let rangeText = '';
-        if (props.county && COUNTY_PRICE_RANGES[props.county]) {
-            const range = COUNTY_PRICE_RANGES[props.county];
-            rangeText = `<p><strong>${props.county} range:</strong> $${range.min.toLocaleString()} - $${range.max.toLocaleString()}</p>`;
-        }
-
         const withinRangeText = props.withinRange ?
             '<p style="color: #000000;"><strong>✓ Sales affordable to workforce</strong></p>' :
             '<p style="color: #000000;"><strong>✗ Sales outside of workforce affordability range</strong></p>';
@@ -1967,16 +1960,14 @@
             .setHTML(`
                 <div class="popup-content">
                     <div class="popup-header">Sales Listing</div>
+                    ${withinRangeText}
                     <p><strong>Address:</strong> ${props.address || 'N/A'}</p>
                     <p><strong>Price:</strong> ${priceFormatted}</p>
                     <p><strong>Listed:</strong> ${listedDateText}</p>
-                    ${rangeText}
-                    ${withinRangeText}
                     <p><strong>Type:</strong> ${props.propertyType || 'N/A'}</p>
                     <p><strong>Bedrooms:</strong> ${bedroomsText}</p>
                     <p><strong>Bathrooms:</strong> ${bathroomsText}</p>
                     <p><strong>Size:</strong> ${sqftText}</p>
-                    <p><strong>Status:</strong> ${props.status || 'N/A'}</p>
                 </div>
             `)
             .addTo(map);
