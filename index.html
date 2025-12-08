@@ -127,6 +127,14 @@
                     <div id="layer-description" class="mt-1 text-xs text-black leading-snug hidden">
                     </div>
                 </div>
+
+                <!-- Sales listings legend -->
+                <div id="sales-legend" class="mt-4 pb-4 hidden border-t border-gray-300 pt-4">
+                    <h3 class="font-medium mb-2 text-black">Sales Listings</h3>
+                    <div class="text-xs text-gray-600 mb-2">Price per square foot</div>
+                    <div id="sales-legend-content" class="space-y-1 text-sm text-black">
+                    </div>
+                </div>
             </div>
 
             <!-- Inline overlays container (shown when 5 or fewer overlays) -->
@@ -711,6 +719,9 @@
                 console.log('Price per sqft quantile breaks:', salesListingsQuantileBreaks);
             }
 
+            // Update the legend with quantile breaks
+            updateSalesListingsLegend();
+
             // Add source
             map.addSource('sales-listings-source', {
                 type: 'geojson',
@@ -913,6 +924,18 @@
                             console.log('Related layer', relatedId, isChecked ? 'shown' : 'hidden');
                         }
                     });
+                }
+
+                // Show/hide sales listings legend when sales listings layer is toggled
+                if (layerId === 'sales-listings') {
+                    const salesLegend = document.getElementById('sales-legend');
+                    if (salesLegend) {
+                        if (isChecked) {
+                            salesLegend.classList.remove('hidden');
+                        } else {
+                            salesLegend.classList.add('hidden');
+                        }
+                    }
                 }
             });
         });
@@ -1368,6 +1391,61 @@
         }
     }
 
+    // Update sales listings legend
+    function updateSalesListingsLegend() {
+        const legendContent = document.getElementById('sales-legend-content');
+
+        if (!salesListingsQuantileBreaks || salesListingsQuantileBreaks.length < 5) {
+            legendContent.innerHTML = '<div class="text-xs text-gray-500">Legend not available</div>';
+            return;
+        }
+
+        const colorPalette = ['#d3d85d', '#89aa42', '#667b39', '#425121'];
+        legendContent.innerHTML = '';
+
+        // Add color entries from highest to lowest (reversed for display)
+        for (let i = colorPalette.length - 1; i >= 0; i--) {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+
+            const colorBox = document.createElement('div');
+            colorBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
+            colorBox.style.backgroundColor = colorPalette[i];
+
+            const label = document.createElement('span');
+            label.className = 'text-xs';
+
+            const minValue = salesListingsQuantileBreaks[i];
+            const maxValue = salesListingsQuantileBreaks[i + 1];
+
+            if (i === colorPalette.length - 1) {
+                label.textContent = '$' + minValue.toFixed(2) + '+ /sq ft';
+            } else {
+                label.textContent = '$' + minValue.toFixed(2) + ' - $' + maxValue.toFixed(2) + ' /sq ft';
+            }
+
+            div.appendChild(colorBox);
+            div.appendChild(label);
+            legendContent.appendChild(div);
+        }
+
+        // Add grey color for no data
+        const noDataDiv = document.createElement('div');
+        noDataDiv.className = 'flex items-center gap-2';
+
+        const greyBox = document.createElement('div');
+        greyBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
+        greyBox.style.backgroundColor = '#999999';
+
+        const greyLabel = document.createElement('span');
+        greyLabel.className = 'text-xs';
+        greyLabel.textContent = 'No data';
+
+        noDataDiv.appendChild(greyBox);
+        noDataDiv.appendChild(greyLabel);
+        legendContent.appendChild(noDataDiv);
+    }
+
     function toggleBasemapSettings() {
         const panel = document.getElementById('basemap-settings');
         const arrow = document.getElementById('basemap-arrow');
@@ -1646,6 +1724,14 @@
                     const checkbox = document.querySelector(`.overlay-toggle[value="${id}"]`);
                     if (checkbox) {
                         checkbox.checked = true;
+                    }
+
+                    // Show sales listings legend if sales listings layer is visible
+                    if (id === 'sales-listings') {
+                        const salesLegend = document.getElementById('sales-legend');
+                        if (salesLegend) {
+                            salesLegend.classList.remove('hidden');
+                        }
                     }
                 }
             });
