@@ -87,6 +87,21 @@
             <h2 id="map-title" class="text-xl font-semibold mb-5"></h2>
 
             <div class="overflow-y-auto flex-grow">
+                <!-- Submarket selector -->
+                <div class="mb-4 -ml-3 relative">
+                    <div class="bg-white rounded px-3 py-2 text-sm border border-gray-200">
+                        <div class="flex items-center justify-between cursor-pointer" id="submarket-dropdown-toggle">
+                            <span class="text-gray-700">Select submarkets</span>
+                            <svg class="w-4 h-4 text-gray-600 transition-transform" id="submarket-dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <div id="submarket-options" class="hidden mt-2 max-h-60 overflow-y-auto">
+                            <!-- Submarket checkboxes will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Data layer selector -->
                 <div class="mb-4 -ml-3 relative">
                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -107,10 +122,20 @@
                             <!-- <option value="tract:housing_unit_count_23">Housing unit count (2023)</option> -->
                             <!-- <option value="tract:total_hh_23">Total households (2023)</option> -->
                         </optgroup>
-                        <optgroup label="Zip Code Data (Zillow)">
+                        <!-- <optgroup label="Zip Code Data (Zillow)">
                             <option value="zip:zhvi_20">Typical home value 2020 (ZHVI)</option>
                             <option value="zip:zhvi_25">Typical home value 2025 (ZHVI)</option>
                             <option value="zip:zhvi_change_20_25">Home value change 2020-2025 (%)</option>
+                        </optgroup> -->
+                        <optgroup label="Geography">
+                            <option value="submarkets">Submarkets</option>
+                        </optgroup>
+                        <optgroup label="Real Estate">
+                            <option value="sales-listings">Recent for-sale listings</option>
+                            <option value="rental-listings">Recent rental listings</option>
+                        </optgroup>
+                        <optgroup label="Employment">
+                            <option value="jobs-clusters">Job Locations (2022)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -326,6 +351,62 @@
         'zip:zhvi_change_20_25': {
             source: 'Zillow Home Value Index (ZHVI)',
             description: 'Percent change in typical home values between 2020 and 2025.'
+        },
+        'sales-listings': {
+            source: 'Recent for-sale property listings',
+            description: `Price classifications by county:<br><br>
+                <strong>Chester County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $232,500<br>
+                Class 2 (Attainable to 80-100% AMI): $232,500 - $290,500<br>
+                Class 3 (Attainable to 100-120% AMI): $290,500 - $349,000<br>
+                Class 4 (Attainable to 120-150% AMI): $349,000 - $436,000<br>
+                Class 5 (Not attainable for workforce): $436,000 and above<br><br>
+                <strong>Lancaster County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $333,000<br>
+                Class 2 (Attainable to 80-100% AMI): $333,000 - $416,000<br>
+                Class 3 (Attainable to 100-120% AMI): $416,000 - $499,500<br>
+                Class 4 (Attainable to 120-150% AMI): $499,500 - $624,500<br>
+                Class 5 (Not attainable for workforce): $624,500 and above<br><br>
+                <strong>Union County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $222,500<br>
+                Class 2 (Attainable to 80-100% AMI): $222,500 - $278,500<br>
+                Class 3 (Attainable to 100-120% AMI): $278,500 - $334,000<br>
+                Class 4 (Attainable to 120-150% AMI): $334,000 - $417,500<br>
+                Class 5 (Not attainable for workforce): $417,500 and above<br><br>
+                <strong>York County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $399,000<br>
+                Class 2 (Attainable to 80-100% AMI): $399,000 - $498,500<br>
+                Class 3 (Attainable to 100-120% AMI): $498,500 - $598,500<br>
+                Class 4 (Attainable to 120-150% AMI): $598,500 - $748,000<br>
+                Class 5 (Not attainable for workforce): $748,000 and above`
+        },
+        'rental-listings': {
+            source: 'Recent rental property listings',
+            description: `Price classifications by county:<br><br>
+                <strong>Chester County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $1,200<br>
+                Class 2 (Attainable to 80-100% AMI): $1,200 - $1,475<br>
+                Class 3 (Attainable to 100-120% AMI): $1,475 - $1,800<br>
+                Class 4 (Attainable to 120-150% AMI): $1,800 - $2,225<br>
+                Class 5 (Not attainable for workforce): $2,225 and above<br><br>
+                <strong>Lancaster County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $1,700<br>
+                Class 2 (Attainable to 80-100% AMI): $1,700 - $2,125<br>
+                Class 3 (Attainable to 100-120% AMI): $2,125 - $2,525<br>
+                Class 4 (Attainable to 120-150% AMI): $2,525 - $3,175<br>
+                Class 5 (Not attainable for workforce): $3,175 and above<br><br>
+                <strong>Union County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $1,150<br>
+                Class 2 (Attainable to 80-100% AMI): $1,150 - $1,425<br>
+                Class 3 (Attainable to 100-120% AMI): $1,425 - $1,700<br>
+                Class 4 (Attainable to 120-150% AMI): $1,700 - $2,150<br>
+                Class 5 (Not attainable for workforce): $2,150 and above<br><br>
+                <strong>York County:</strong><br>
+                Class 1 (Attainable to &lt;80% AMI): Under $2,025<br>
+                Class 2 (Attainable to 80-100% AMI): $2,025 - $2,525<br>
+                Class 3 (Attainable to 100-120% AMI): $2,525 - $3,050<br>
+                Class 4 (Attainable to 120-150% AMI): $3,050 - $3,775<br>
+                Class 5 (Not attainable for workforce): $3,775 and above`
         }
     };
 
@@ -336,18 +417,6 @@
             label: 'Municipalities',
             category: 'Boundaries',
             relatedLayers: [] // Layers that should toggle together
-        },
-        {
-            id: 'sales-listings',
-            label: 'Sales Listings',
-            category: 'Real Estate',
-            relatedLayers: []
-        },
-        {
-            id: 'rental-listings',
-            label: 'Rental Listings',
-            category: 'Real Estate',
-            relatedLayers: []
         }
         // Add more overlays here as needed
         // Example:
@@ -366,21 +435,71 @@
     let rentalListingsData = null;
     let currentDataLayer = null;
     let currentLayerName = null; // Store the layer name separately
+    let selectedSubmarkets = new Set();
+    let submarketData = null;
 
     // Price ranges by county for sales listings
     const COUNTY_PRICE_RANGES = {
-        'York': { min: 299000, max: 748000 },
-        'Chester': { min: 174500, max: 436000 },
-        'Lancaster': { min: 249500, max: 624500 },
-        'Union': { min: 167000, max: 417500 }
+        'York': [
+            { min: 0, max: 399000 },           // Class 1
+            { min: 399000, max: 498500 },      // Class 2
+            { min: 498500, max: 598500 },      // Class 3
+            { min: 598500, max: 748000 },      // Class 4
+            { min: 748000, max: Infinity }     // Class 5
+        ],
+        'Chester': [
+            { min: 0, max: 232500 },           // Class 1
+            { min: 232500, max: 290500 },      // Class 2
+            { min: 290500, max: 349000 },      // Class 3
+            { min: 349000, max: 436000 },      // Class 4
+            { min: 436000, max: Infinity }     // Class 5
+        ],
+        'Lancaster': [
+            { min: 0, max: 333000 },           // Class 1
+            { min: 333000, max: 416000 },      // Class 2
+            { min: 416000, max: 499500 },      // Class 3
+            { min: 499500, max: 624500 },      // Class 4
+            { min: 624500, max: Infinity }     // Class 5
+        ],
+        'Union': [
+            { min: 0, max: 222500 },           // Class 1
+            { min: 222500, max: 278500 },      // Class 2
+            { min: 278500, max: 334000 },      // Class 3
+            { min: 334000, max: 417500 },      // Class 4
+            { min: 417500, max: Infinity }     // Class 5
+        ]
     };
 
-    // Price ranges by county for rental listings
-    const RENTAL_PRICE_RANGES = {
-        'York': { min: 1500, max: 3775 },
-        'Chester': { min: 900, max: 2225 },
-        'Lancaster': { min: 1250, max: 3175 },
-        'Union': { min: 850, max: 2150 }
+    // Price ranges by county for rental listings (5 classes)
+    const COUNTY_RENTAL_PRICE_RANGES = {
+        'York': [
+            { min: 0, max: 2025 },           // Class 1
+            { min: 2025, max: 2525 },        // Class 2
+            { min: 2525, max: 3050 },        // Class 3
+            { min: 3050, max: 3775 },        // Class 4
+            { min: 3775, max: Infinity }     // Class 5
+        ],
+        'Chester': [
+            { min: 0, max: 1200 },           // Class 1
+            { min: 1200, max: 1475 },        // Class 2
+            { min: 1475, max: 1800 },        // Class 3
+            { min: 1800, max: 2225 },        // Class 4
+            { min: 2225, max: Infinity }     // Class 5
+        ],
+        'Lancaster': [
+            { min: 0, max: 1700 },           // Class 1
+            { min: 1700, max: 2125 },        // Class 2
+            { min: 2125, max: 2525 },        // Class 3
+            { min: 2525, max: 3175 },        // Class 4
+            { min: 3175, max: Infinity }     // Class 5
+        ],
+        'Union': [
+            { min: 0, max: 1150 },           // Class 1
+            { min: 1150, max: 1425 },        // Class 2
+            { min: 1425, max: 1700 },        // Class 3
+            { min: 1700, max: 2150 },        // Class 4
+            { min: 2150, max: Infinity }     // Class 5
+        ]
     };
 
     // Initial map settings (will be updated to fit county)
@@ -658,6 +777,148 @@
 
         console.log('Added municipalities overlay layer');
 
+        // Add submarkets source and layers
+        map.addSource('submarkets-source', {
+            type: 'geojson',
+            data: 'Submarkets.geojson'
+        });
+
+        // Add submarkets fill layer (transparent blue fill)
+        map.addLayer({
+            id: 'submarkets-fill',
+            type: 'fill',
+            source: 'submarkets-source',
+            paint: {
+                'fill-color': '#ec5d9f',
+                'fill-opacity': 0.15
+            },
+            layout: {
+                visibility: 'none'
+            }
+        }, firstSymbolId);
+
+        // Add submarkets outline layer (thin blue outline)
+        map.addLayer({
+            id: 'submarkets-outline',
+            type: 'line',
+            source: 'submarkets-source',
+            paint: {
+                'line-color': '#ec5d9f',
+                'line-width': 1
+            },
+            layout: {
+                visibility: 'none'
+            }
+        }, firstSymbolId);
+
+        // Add submarkets labels layer
+        map.addLayer({
+            id: 'submarkets-labels',
+            type: 'symbol',
+            source: 'submarkets-source',
+            layout: {
+                'text-field': ['get', 'SubgeoName'],
+                'text-font': ['Roboto Bold', 'Arial Unicode MS Bold'],
+                'text-size': 14,
+                visibility: 'none'
+            },
+            paint: {
+                'text-color': '#ec5d9f',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2
+            }
+        });
+
+        console.log('Added submarkets overlay layers');
+
+        // Load submarkets data for selection dropdown
+        fetch('Submarkets.geojson')
+            .then(response => response.json())
+            .then(data => {
+                submarketData = data;
+
+                // Extract unique submarket names and sort
+                const submarketNames = [...new Set(data.features.map(f => f.properties.SubgeoName))].sort();
+
+                // Populate dropdown with submarkets
+                const optionsContainer = document.getElementById('submarket-options');
+
+                submarketNames.forEach(name => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = name;
+                    checkbox.className = 'rounded border-gray-300';
+
+                    const span = document.createElement('span');
+                    span.textContent = name;
+                    span.className = 'text-sm';
+
+                    label.appendChild(checkbox);
+                    label.appendChild(span);
+                    optionsContainer.appendChild(label);
+
+                    // Add change handler
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            selectedSubmarkets.add(name);
+                        } else {
+                            selectedSubmarkets.delete(name);
+                        }
+                        updateSelectedSubmarkets();
+                    });
+                });
+
+                // Add source and layers for selected submarkets highlighting
+                map.addSource('selected-submarkets-source', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: []
+                    }
+                });
+
+                // Add highlight fill layer (transparent)
+                map.addLayer({
+                    id: 'selected-submarkets-fill',
+                    type: 'fill',
+                    source: 'selected-submarkets-source',
+                    paint: {
+                        'fill-color': '#000000',
+                        'fill-opacity': 0
+                    }
+                }, firstSymbolId);
+
+                // Add highlight outline layer (black dotted)
+                map.addLayer({
+                    id: 'selected-submarkets-outline',
+                    type: 'line',
+                    source: 'selected-submarkets-source',
+                    paint: {
+                        'line-color': '#000000',
+                        'line-width': 2,
+                        'line-dasharray': [2, 2]
+                    }
+                }, firstSymbolId);
+            })
+            .catch(error => console.error('Error loading submarkets:', error));
+
+        // Toggle dropdown visibility
+        document.getElementById('submarket-dropdown-toggle').addEventListener('click', () => {
+            const optionsDiv = document.getElementById('submarket-options');
+            const arrow = document.getElementById('submarket-dropdown-arrow');
+
+            if (optionsDiv.classList.contains('hidden')) {
+                optionsDiv.classList.remove('hidden');
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                optionsDiv.classList.add('hidden');
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+
         // Load and combine all sales listings CSV files
         const salesListingsFiles = [
             'sales_listings_Chester.csv',
@@ -694,13 +955,19 @@
                     return d.county && countyNames.includes(d.county);
                 })
                 .map(d => {
-                    // Determine if price is within range for this county
-                    let withinRange = false;
+                    // Determine price class (1-5) for this county
+                    let priceClass = 0; // 0 means no valid price
                     if (d.price && d.price !== 'NA' && d.county) {
                         const price = parseFloat(d.price);
-                        const range = COUNTY_PRICE_RANGES[d.county];
-                        if (!isNaN(price) && range) {
-                            withinRange = price >= range.min && price <= range.max;
+                        const ranges = COUNTY_PRICE_RANGES[d.county];
+                        if (!isNaN(price) && ranges) {
+                            // Find which class this price falls into
+                            for (let i = 0; i < ranges.length; i++) {
+                                if (price >= ranges[i].min && price < ranges[i].max) {
+                                    priceClass = i + 1; // Classes are 1-indexed
+                                    break;
+                                }
+                            }
                         }
                     }
 
@@ -720,7 +987,7 @@
                             status: d.status,
                             county: d.county,
                             listedDate: d.listedDate,
-                            withinRange: withinRange
+                            priceClass: priceClass
                         }
                     };
                 });
@@ -739,11 +1006,16 @@
                 }
             });
 
-            // Create color expression: orange for within range, grey for outside range
+            // Create color expression based on price class (1-5)
             const circleColorExpression = [
-                'case',
-                ['get', 'withinRange'], '#ffb143', // Orange for within range
-                '#e1e1e1' // Grey for outside range
+                'match',
+                ['get', 'priceClass'],
+                1, '#e1e1e1',  // Class 1
+                2, '#d3d85d',  // Class 2
+                3, '#89aa42',  // Class 3
+                4, '#667b39',  // Class 4
+                5, '#8e2e36',  // Class 5
+                '#e1e1e1'      // Default (no valid price) - grey
             ];
 
             // Add layer with circle markers
@@ -803,13 +1075,18 @@
                     return d.county && countyNames.includes(d.county);
                 })
                 .map(d => {
-                    // Determine if price is within range for this county
-                    let withinRange = false;
+                    // Determine price class (1-5) for this county
+                    let priceClass = 0;
                     if (d.price && d.price !== 'NA' && d.county) {
                         const price = parseFloat(d.price);
-                        const range = RENTAL_PRICE_RANGES[d.county];
-                        if (!isNaN(price) && range) {
-                            withinRange = price >= range.min && price <= range.max;
+                        const ranges = COUNTY_RENTAL_PRICE_RANGES[d.county];
+                        if (!isNaN(price) && ranges) {
+                            for (let i = 0; i < ranges.length; i++) {
+                                if (price >= ranges[i].min && price < ranges[i].max) {
+                                    priceClass = i + 1;
+                                    break;
+                                }
+                            }
                         }
                     }
 
@@ -829,7 +1106,7 @@
                             status: d.status,
                             county: d.county,
                             listedDate: d.listedDate,
-                            withinRange: withinRange
+                            priceClass: priceClass
                         }
                     };
                 });
@@ -848,11 +1125,16 @@
                 }
             });
 
-            // Create color expression: orange for within range, grey for outside range
+            // Create color expression based on price class (1-5)
             const circleColorExpression = [
-                'case',
-                ['get', 'withinRange'], '#ffb143', // Orange for within range
-                '#e1e1e1' // Grey for outside range
+                'match',
+                ['get', 'priceClass'],
+                1, '#e1e1e1',  // Class 1
+                2, '#d3d85d',  // Class 2
+                3, '#89aa42',  // Class 3
+                4, '#667b39',  // Class 4
+                5, '#8e2e36',  // Class 5
+                '#e1e1e1'      // Default (no valid price) - grey
             ];
 
             // Add layer with circle markers
@@ -875,6 +1157,107 @@
             console.log('Added rental listings layer with range-based colors');
         })
         .catch(error => console.error('Error loading rental listings:', error));
+
+        // Load CatawbaJobs2022 data with clustering
+        fetch('CatawbaJobs2022.geojson')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Loaded CatawbaJobs2022 with', data.features.length, 'features');
+
+                // Add source with clustering enabled
+                map.addSource('jobs-source', {
+                    type: 'geojson',
+                    data: data,
+                    cluster: true,
+                    clusterMaxZoom: 14, // Max zoom to cluster points on
+                    clusterRadius: 50, // Radius of each cluster when clustering points
+                    clusterProperties: {
+                        // Sum of c000 values for all points in cluster
+                        'sum_c000': ['+', ['get', 'c000']]
+                    }
+                });
+
+                // Add clustered circle layer
+                map.addLayer({
+                    id: 'jobs-clusters',
+                    type: 'circle',
+                    source: 'jobs-source',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        // Use interpolate for continuous sizing based on total job count
+                        'circle-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'sum_c000'],
+                            10, 10,      // 10 jobs -> 10px radius
+                            100, 15,     // 100 jobs -> 15px radius
+                            1000, 20,    // 1,000 jobs -> 20px radius
+                            5000, 25,    // 5,000 jobs -> 25px radius
+                            10000, 30,   // 10,000 jobs -> 30px radius
+                            50000, 35,   // 50,000 jobs -> 35px radius
+                            100000, 40   // 100,000 jobs -> 40px radius
+                        ],
+                        'circle-color': '#11b4da',
+                        'circle-opacity': 0.8,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#ffffff'
+                    },
+                    layout: {
+                        visibility: 'none'
+                    }
+                }, firstSymbolId);
+
+                // Add cluster count label layer
+                map.addLayer({
+                    id: 'jobs-cluster-count',
+                    type: 'symbol',
+                    source: 'jobs-source',
+                    filter: ['has', 'point_count'],
+                    layout: {
+                        'text-field': [
+                            'number-format',
+                            ['get', 'sum_c000'],
+                            { 'max-fraction-digits': 0 }
+                        ],
+                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                        'text-size': 12,
+                        visibility: 'none'
+                    },
+                    paint: {
+                        'text-color': '#000000'
+                    }
+                });
+
+                // Add unclustered point layer sized by c000
+                map.addLayer({
+                    id: 'jobs-unclustered',
+                    type: 'circle',
+                    source: 'jobs-source',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        // Size circles based on c000 value
+                        'circle-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'c000'],
+                            1, 4,   // c000 = 1 -> radius 4
+                            50, 8,  // c000 = 50 -> radius 8
+                            100, 12, // c000 = 100 -> radius 12
+                            200, 16  // c000 = 200 -> radius 16
+                        ],
+                        'circle-color': '#11b4da',
+                        'circle-opacity': 0.7,
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': '#ffffff'
+                    },
+                    layout: {
+                        visibility: 'none'
+                    }
+                }, firstSymbolId);
+
+                console.log('Added CatawbaJobs2022 layers with clustering');
+            })
+            .catch(error => console.error('Error loading CatawbaJobs2022:', error));
 
         // Initialize overlay UI based on count
         initializeOverlays();
@@ -1176,8 +1559,10 @@
         if (map.getSource('tracts-data-source')) map.removeSource('tracts-data-source');
         if (map.getSource('zips-data-source')) map.removeSource('zips-data-source');
 
-        if (!layerType || !attribute) {
+        if (!layerType) {
             document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.add('hidden');
             currentDataLayer = null;
             currentLayerName = null; // Clear stored layer name
             // Hide tract outline when no data layer is selected
@@ -1188,7 +1573,254 @@
             if (map.getLayer('zipcodes-outline')) {
                 map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
             }
+            // Hide all data layers when no layer is selected
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-clusters')) {
+                map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-cluster-count')) {
+                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-unclustered')) {
+                map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+            }
             return;
+        }
+
+        // Handle submarkets layer specially
+        if (layerType === 'submarkets') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+
+            // Show submarkets layers
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'visible');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'visible');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'visible');
+            }
+
+            // Hide legends
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.add('hidden');
+
+            // Store current layer
+            currentDataLayer = 'submarkets';
+
+            return;
+        }
+
+        // Handle sales-listings layer
+        if (layerType === 'sales-listings') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+            // Hide submarkets
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+
+            // Show sales listings layer
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'visible');
+            }
+
+            // Hide rental and jobs layers
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-clusters')) {
+                map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-cluster-count')) {
+                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-unclustered')) {
+                map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+            }
+
+            // Show legend for sales listings
+            updateSalesListingsLegend();
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.remove('hidden');
+
+            // Store current layer
+            currentDataLayer = 'sales-listings';
+
+            // Update "About this layer" section
+            updateAboutLayer('sales-listings');
+
+            return;
+        }
+
+        // Handle rental-listings layer
+        if (layerType === 'rental-listings') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+            // Hide submarkets
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+
+            // Show rental listings layer
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'visible');
+            }
+
+            // Hide sales and jobs layers
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-clusters')) {
+                map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-cluster-count')) {
+                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-unclustered')) {
+                map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+            }
+
+            // Show legend for rental listings
+            updateRentalListingsLegend();
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.remove('hidden');
+
+            // Store current layer
+            currentDataLayer = 'rental-listings';
+
+            // Update "About this layer" section
+            updateAboutLayer('rental-listings');
+
+            return;
+        }
+
+        // Handle jobs-clusters layer
+        if (layerType === 'jobs-clusters') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+            // Hide submarkets
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+
+            // Show jobs layers
+            if (map.getLayer('jobs-clusters')) {
+                map.setLayoutProperty('jobs-clusters', 'visibility', 'visible');
+            }
+            if (map.getLayer('jobs-cluster-count')) {
+                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'visible');
+            }
+            if (map.getLayer('jobs-unclustered')) {
+                map.setLayoutProperty('jobs-unclustered', 'visibility', 'visible');
+            }
+
+            // Hide sales and rental layers
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'none');
+            }
+
+            // Hide legends
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.add('hidden');
+
+            // Store current layer
+            currentDataLayer = 'jobs-clusters';
+
+            return;
+        }
+
+        if (!attribute) {
+            document.getElementById('legend').classList.add('hidden');
+            currentDataLayer = null;
+            currentLayerName = null;
+            return;
+        }
+
+        // Hide submarkets, sales, rental, and jobs when tract/zip data layers are selected
+        if (map.getLayer('submarkets-fill')) {
+            map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+        }
+        if (map.getLayer('submarkets-outline')) {
+            map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+        }
+        if (map.getLayer('submarkets-labels')) {
+            map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+        }
+        if (map.getLayer('sales-listings')) {
+            map.setLayoutProperty('sales-listings', 'visibility', 'none');
+        }
+        if (map.getLayer('rental-listings')) {
+            map.setLayoutProperty('rental-listings', 'visibility', 'none');
+        }
+        if (map.getLayer('jobs-clusters')) {
+            map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
+        }
+        if (map.getLayer('jobs-cluster-count')) {
+            map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
+        }
+        if (map.getLayer('jobs-unclustered')) {
+            map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
         }
 
         // Show/hide tract outline based on layer type
@@ -1486,6 +2118,9 @@
         }
 
         legend.classList.remove('hidden');
+        // Hide sales and rental legends when showing tract/zip legend
+        document.getElementById('sales-legend').classList.add('hidden');
+        document.getElementById('rental-legend').classList.add('hidden');
     }
 
     // Update layer description section
@@ -1509,50 +2144,31 @@
         const legendContent = document.getElementById('sales-legend-content');
         legendContent.innerHTML = '';
 
-        // Orange - within range
-        const withinRangeDiv = document.createElement('div');
-        withinRangeDiv.className = 'flex items-center gap-2 mb-2';
+        // Define the 5 price classes with colors
+        const priceClasses = [
+            { class: 1, color: '#e1e1e1', label: 'Attainable to <80% AMI income household' },
+            { class: 2, color: '#d3d85d', label: 'Attainable to 80-100% AMI income household' },
+            { class: 3, color: '#89aa42', label: 'Attainable to 100-120% AMI income household' },
+            { class: 4, color: '#667b39', label: 'Attainable to 120-150% AMI income household' },
+            { class: 5, color: '#8e2e36', label: 'Not attainable for workforce household' }
+        ];
 
-        const orangeBox = document.createElement('div');
-        orangeBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
-        orangeBox.style.backgroundColor = '#ffb143';
+        // Add each price class to the legend
+        priceClasses.forEach(pc => {
+            const classDiv = document.createElement('div');
+            classDiv.className = 'flex items-center gap-2 mb-2';
 
-        const orangeLabel = document.createElement('span');
-        orangeLabel.className = 'text-xs';
-        orangeLabel.textContent = 'Within price range';
+            const colorBox = document.createElement('div');
+            colorBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
+            colorBox.style.backgroundColor = pc.color;
 
-        withinRangeDiv.appendChild(orangeBox);
-        withinRangeDiv.appendChild(orangeLabel);
-        legendContent.appendChild(withinRangeDiv);
+            const label = document.createElement('span');
+            label.className = 'text-xs';
+            label.textContent = pc.label;
 
-        // Red - outside range
-        const outsideRangeDiv = document.createElement('div');
-        outsideRangeDiv.className = 'flex items-center gap-2 mb-3';
-
-        const redBox = document.createElement('div');
-        redBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
-        redBox.style.backgroundColor = '#e1e1e1';
-
-        const redLabel = document.createElement('span');
-        redLabel.className = 'text-xs';
-        redLabel.textContent = 'Outside price range';
-
-        outsideRangeDiv.appendChild(redBox);
-        outsideRangeDiv.appendChild(redLabel);
-        legendContent.appendChild(outsideRangeDiv);
-
-        // Add price ranges by county
-        const rangesTitle = document.createElement('div');
-        rangesTitle.className = 'text-xs font-semibold text-gray-700 mb-1 mt-2';
-        rangesTitle.textContent = 'Price ranges by county:';
-        legendContent.appendChild(rangesTitle);
-
-        Object.keys(COUNTY_PRICE_RANGES).forEach(county => {
-            const range = COUNTY_PRICE_RANGES[county];
-            const rangeDiv = document.createElement('div');
-            rangeDiv.className = 'text-xs text-gray-600 ml-2';
-            rangeDiv.textContent = `${county}: $${range.min.toLocaleString()} - $${range.max.toLocaleString()}`;
-            legendContent.appendChild(rangeDiv);
+            classDiv.appendChild(colorBox);
+            classDiv.appendChild(label);
+            legendContent.appendChild(classDiv);
         });
     }
 
@@ -1561,50 +2177,29 @@
         const legendContent = document.getElementById('rental-legend-content');
         legendContent.innerHTML = '';
 
-        // Orange - within range
-        const withinRangeDiv = document.createElement('div');
-        withinRangeDiv.className = 'flex items-center gap-2 mb-2';
+        const priceClasses = [
+            { class: 1, color: '#e1e1e1', label: 'Attainable to <80% AMI income household' },
+            { class: 2, color: '#d3d85d', label: 'Attainable to 80-100% AMI income household' },
+            { class: 3, color: '#89aa42', label: 'Attainable to 100-120% AMI income household' },
+            { class: 4, color: '#667b39', label: 'Attainable to 120-150% AMI income household' },
+            { class: 5, color: '#8e2e36', label: 'Not attainable for workforce household' }
+        ];
 
-        const orangeBox = document.createElement('div');
-        orangeBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
-        orangeBox.style.backgroundColor = '#ffb143';
+        priceClasses.forEach(pc => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex items-center gap-2 mb-2';
 
-        const orangeLabel = document.createElement('span');
-        orangeLabel.className = 'text-xs';
-        orangeLabel.textContent = 'Within price range';
+            const colorBox = document.createElement('div');
+            colorBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
+            colorBox.style.backgroundColor = pc.color;
 
-        withinRangeDiv.appendChild(orangeBox);
-        withinRangeDiv.appendChild(orangeLabel);
-        legendContent.appendChild(withinRangeDiv);
+            const label = document.createElement('span');
+            label.className = 'text-xs';
+            label.textContent = pc.label;
 
-        // Light grey - outside range
-        const outsideRangeDiv = document.createElement('div');
-        outsideRangeDiv.className = 'flex items-center gap-2 mb-3';
-
-        const greyBox = document.createElement('div');
-        greyBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
-        greyBox.style.backgroundColor = '#e1e1e1';
-
-        const greyLabel = document.createElement('span');
-        greyLabel.className = 'text-xs';
-        greyLabel.textContent = 'Outside price range';
-
-        outsideRangeDiv.appendChild(greyBox);
-        outsideRangeDiv.appendChild(greyLabel);
-        legendContent.appendChild(outsideRangeDiv);
-
-        // Add price ranges by county
-        const rangesTitle = document.createElement('div');
-        rangesTitle.className = 'text-xs font-semibold text-gray-700 mb-1 mt-2';
-        rangesTitle.textContent = 'Price ranges by county:';
-        legendContent.appendChild(rangesTitle);
-
-        Object.keys(RENTAL_PRICE_RANGES).forEach(county => {
-            const range = RENTAL_PRICE_RANGES[county];
-            const rangeDiv = document.createElement('div');
-            rangeDiv.className = 'text-xs text-gray-600 ml-2';
-            rangeDiv.textContent = `${county}: $${range.min.toLocaleString()} - $${range.max.toLocaleString()}`;
-            legendContent.appendChild(rangeDiv);
+            itemDiv.appendChild(colorBox);
+            itemDiv.appendChild(label);
+            legendContent.appendChild(itemDiv);
         });
     }
 
@@ -1615,6 +2210,42 @@
         arrow.classList.toggle('rotate-180');
     }
 
+    // Function to update selected submarkets display
+    function updateSelectedSubmarkets() {
+        if (!submarketData || !map.getSource('selected-submarkets-source')) return;
+
+        // Filter features for selected submarkets
+        const selectedFeatures = submarketData.features.filter(f =>
+            selectedSubmarkets.has(f.properties.SubgeoName)
+        );
+
+        // Update the source
+        map.getSource('selected-submarkets-source').setData({
+            type: 'FeatureCollection',
+            features: selectedFeatures
+        });
+
+        // Zoom to selected submarkets if any
+        if (selectedFeatures.length > 0) {
+            // Calculate bounds of all selected features
+            const bounds = new mapboxgl.LngLatBounds();
+            selectedFeatures.forEach(feature => {
+                if (feature.geometry.type === 'Polygon') {
+                    feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
+                } else if (feature.geometry.type === 'MultiPolygon') {
+                    feature.geometry.coordinates.forEach(polygon => {
+                        polygon[0].forEach(coord => bounds.extend(coord));
+                    });
+                }
+            });
+
+            map.fitBounds(bounds, {
+                padding: 50,
+                duration: 1000
+            });
+        }
+    }
+
     function switchBasemap(newStyle) {
         currentBasemap = newStyle;
 
@@ -1622,7 +2253,7 @@
         const savedLayerState = currentDataLayer;
 
         // Capture visible overlay states before switching
-        const overlayLayers = ['municipalities-outline', 'sales-listings', 'rental-listings'];
+        const overlayLayers = ['municipalities-outline'];
         const visibleOverlays = overlayLayers.filter(id => {
             const layer = map.getLayer(id);
             return layer && map.getLayoutProperty(id, 'visibility') === 'visible';
@@ -1780,6 +2411,94 @@
 
             console.log('Re-added municipalities overlay layer');
 
+            // Re-add submarkets source and layers
+            map.addSource('submarkets-source', {
+                type: 'geojson',
+                data: 'Submarkets.geojson'
+            });
+
+            map.addLayer({
+                id: 'submarkets-fill',
+                type: 'fill',
+                source: 'submarkets-source',
+                paint: {
+                    'fill-color': '#ec5d9f',
+                    'fill-opacity': 0.15
+                },
+                layout: {
+                    visibility: 'none'
+                }
+            }, firstSymbolId);
+
+            map.addLayer({
+                id: 'submarkets-outline',
+                type: 'line',
+                source: 'submarkets-source',
+                paint: {
+                    'line-color': '#ec5d9f',
+                    'line-width': 1
+                },
+                layout: {
+                    visibility: 'none'
+                }
+            }, firstSymbolId);
+
+            map.addLayer({
+                id: 'submarkets-labels',
+                type: 'symbol',
+                source: 'submarkets-source',
+                layout: {
+                    'text-field': ['get', 'SubgeoName'],
+                    'text-font': ['Roboto Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 14,
+                    visibility: 'none'
+                },
+                paint: {
+                    'text-color': '#ec5d9f',
+                    'text-halo-color': '#ffffff',
+                    'text-halo-width': 2
+                }
+            });
+
+            console.log('Re-added submarkets overlay layers');
+
+            // Re-add selected submarkets layers
+            map.addSource('selected-submarkets-source', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: []
+                }
+            });
+
+            map.addLayer({
+                id: 'selected-submarkets-fill',
+                type: 'fill',
+                source: 'selected-submarkets-source',
+                paint: {
+                    'fill-color': '#000000',
+                    'fill-opacity': 0
+                }
+            }, firstSymbolId);
+
+            map.addLayer({
+                id: 'selected-submarkets-outline',
+                type: 'line',
+                source: 'selected-submarkets-source',
+                paint: {
+                    'line-color': '#000000',
+                    'line-width': 2,
+                    'line-dasharray': [2, 2]
+                }
+            }, firstSymbolId);
+
+            // Restore selected submarkets if any
+            if (selectedSubmarkets && selectedSubmarkets.size > 0) {
+                updateSelectedSubmarkets();
+            }
+
+            console.log('Re-added selected submarkets layers');
+
             // Re-add sales listings layer if data is available
             if (salesListingsData) {
                 // Get county names without "County" suffix for filtering
@@ -1795,13 +2514,19 @@
                         return d.county && countyNames.includes(d.county);
                     })
                     .map(d => {
-                        // Determine if price is within range for this county
-                        let withinRange = false;
+                        // Determine price class (1-5) for this county
+                        let priceClass = 0; // 0 means no valid price
                         if (d.price && d.price !== 'NA' && d.county) {
                             const price = parseFloat(d.price);
-                            const range = COUNTY_PRICE_RANGES[d.county];
-                            if (!isNaN(price) && range) {
-                                withinRange = price >= range.min && price <= range.max;
+                            const ranges = COUNTY_PRICE_RANGES[d.county];
+                            if (!isNaN(price) && ranges) {
+                                // Find which class this price falls into
+                                for (let i = 0; i < ranges.length; i++) {
+                                    if (price >= ranges[i].min && price < ranges[i].max) {
+                                        priceClass = i + 1; // Classes are 1-indexed
+                                        break;
+                                    }
+                                }
                             }
                         }
 
@@ -1821,7 +2546,7 @@
                                 status: d.status,
                                 county: d.county,
                                 listedDate: d.listedDate,
-                                withinRange: withinRange
+                                priceClass: priceClass
                             }
                         };
                     });
@@ -1875,13 +2600,18 @@
                         return d.county && countyNames.includes(d.county);
                     })
                     .map(d => {
-                        // Determine if price is within range for this county
-                        let withinRange = false;
+                        // Determine price class (1-5) for this county
+                        let priceClass = 0;
                         if (d.price && d.price !== 'NA' && d.county) {
                             const price = parseFloat(d.price);
-                            const range = RENTAL_PRICE_RANGES[d.county];
-                            if (!isNaN(price) && range) {
-                                withinRange = price >= range.min && price <= range.max;
+                            const ranges = COUNTY_RENTAL_PRICE_RANGES[d.county];
+                            if (!isNaN(price) && ranges) {
+                                for (let i = 0; i < ranges.length; i++) {
+                                    if (price >= ranges[i].min && price < ranges[i].max) {
+                                        priceClass = i + 1;
+                                        break;
+                                    }
+                                }
                             }
                         }
 
@@ -1901,7 +2631,7 @@
                                 status: d.status,
                                 county: d.county,
                                 listedDate: d.listedDate,
-                                withinRange: withinRange
+                                priceClass: priceClass
                             }
                         };
                     });
@@ -1914,11 +2644,16 @@
                     }
                 });
 
-                // Create color expression: orange for within range, grey for outside range
+                // Create color expression based on price class (1-5)
                 const circleColorExpression = [
-                    'case',
-                    ['get', 'withinRange'], '#ffb143', // Orange for within range
-                    '#e1e1e1' // Grey for outside range
+                    'match',
+                    ['get', 'priceClass'],
+                    1, '#e1e1e1',
+                    2, '#d3d85d',
+                    3, '#89aa42',
+                    4, '#667b39',
+                    5, '#8e2e36',
+                    '#e1e1e1'
                 ];
 
                 map.addLayer({
@@ -1939,6 +2674,104 @@
 
                 console.log('Re-added rental listings layer with range-based colors');
             }
+
+            // Re-add jobs layers with clustering
+            fetch('CatawbaJobs2022.geojson')
+                .then(response => response.json())
+                .then(data => {
+                    // Add source with clustering enabled
+                    map.addSource('jobs-source', {
+                        type: 'geojson',
+                        data: data,
+                        cluster: true,
+                        clusterMaxZoom: 14,
+                        clusterRadius: 50,
+                        clusterProperties: {
+                            // Sum of c000 values for all points in cluster
+                            'sum_c000': ['+', ['get', 'c000']]
+                        }
+                    });
+
+                    // Add clustered circle layer
+                    map.addLayer({
+                        id: 'jobs-clusters',
+                        type: 'circle',
+                        source: 'jobs-source',
+                        filter: ['has', 'point_count'],
+                        paint: {
+                            // Use interpolate for continuous sizing based on total job count
+                            'circle-radius': [
+                                'interpolate',
+                                ['linear'],
+                                ['get', 'sum_c000'],
+                                10, 10,      // 10 jobs -> 10px radius
+                                100, 15,     // 100 jobs -> 15px radius
+                                1000, 20,    // 1,000 jobs -> 20px radius
+                                5000, 25,    // 5,000 jobs -> 25px radius
+                                10000, 30,   // 10,000 jobs -> 30px radius
+                                50000, 35,   // 50,000 jobs -> 35px radius
+                                100000, 40   // 100,000 jobs -> 40px radius
+                            ],
+                            'circle-color': '#11b4da',
+                            'circle-opacity': 0.8,
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color': '#ffffff'
+                        },
+                        layout: {
+                            visibility: 'none'
+                        }
+                    }, firstSymbolId);
+
+                    // Add cluster count label layer
+                    map.addLayer({
+                        id: 'jobs-cluster-count',
+                        type: 'symbol',
+                        source: 'jobs-source',
+                        filter: ['has', 'point_count'],
+                        layout: {
+                            'text-field': [
+                                'number-format',
+                                ['get', 'sum_c000'],
+                                { 'max-fraction-digits': 0 }
+                            ],
+                            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                            'text-size': 12,
+                            visibility: 'none'
+                        },
+                        paint: {
+                            'text-color': '#000000'
+                        }
+                    });
+
+                    // Add unclustered point layer sized by c000
+                    map.addLayer({
+                        id: 'jobs-unclustered',
+                        type: 'circle',
+                        source: 'jobs-source',
+                        filter: ['!', ['has', 'point_count']],
+                        paint: {
+                            'circle-radius': [
+                                'interpolate',
+                                ['linear'],
+                                ['get', 'c000'],
+                                1, 4,
+                                50, 8,
+                                100, 12,
+                                200, 16
+                            ],
+                            'circle-color': '#11b4da',
+                            'circle-opacity': 0.7,
+                            'circle-stroke-width': 1,
+                            'circle-stroke-color': '#ffffff'
+                        },
+                        layout: {
+                            visibility: 'none'
+                        }
+                    }, firstSymbolId);
+
+                    console.log('Re-added jobs layers with clustering');
+                })
+                .catch(error => console.error('Error re-loading jobs:', error));
 
             // Re-initialize overlay UI
             initializeOverlays();
@@ -2015,6 +2848,17 @@
             updateDataLayer(null, null);
             // Reset to "Select data layer"
             layerSelect.value = '';
+        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-clusters') {
+            // Handle non-quantile layers (no attribute split needed)
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            currentLayerName = selectedOption.text;
+            console.log('Stored layer name:', currentLayerName);
+
+            updateDataLayer(selectedValue, null);
+            // Switch to blank option to show just the arrow
+            setTimeout(() => {
+                layerSelect.value = 'blank';
+            }, 100);
         } else {
             const [layerType, attribute] = selectedValue.split(':');
             console.log('Updating data layer:', layerType, attribute);
@@ -2242,8 +3086,7 @@
             .setLngLat(e.lngLat)
             .setHTML(`
                 <div class="popup-content">
-                    <div class="popup-header">Sales Listing</div>
-                    ${withinRangeText}
+                    <div class="popup-header">Recent for-sale listing</div>
                     <p><strong>Address:</strong> ${props.address || 'N/A'}</p>
                     <p><strong>Price:</strong> ${priceFormatted}</p>
                     <p><strong>Listed:</strong> ${listedDateText}</p>
@@ -2355,6 +3198,58 @@
     });
 
     map.on('mouseleave', 'rental-listings', function() {
+        map.getCanvas().style.cursor = '';
+    });
+
+    // Add click handler for job clusters
+    map.on('click', 'jobs-clusters', function(e) {
+        const features = map.queryRenderedFeatures(e.point, {
+            layers: ['jobs-clusters']
+        });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource('jobs-source').getClusterExpansionZoom(
+            clusterId,
+            function(err, zoom) {
+                if (err) return;
+                map.easeTo({
+                    center: features[0].geometry.coordinates,
+                    zoom: zoom
+                });
+            }
+        );
+    });
+
+    // Add click handler for unclustered job points
+    map.on('click', 'jobs-unclustered', function(e) {
+        const props = e.features[0].properties;
+        const jobCount = props.c000 ? Math.round(props.c000) : 'N/A';
+
+        new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div class="popup-content">
+                    <div class="popup-header">Job Location</div>
+                    <p><strong>Total Jobs:</strong> ${jobCount}</p>
+                    <p><strong>Location ID:</strong> ${props.id || 'N/A'}</p>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    // Add hover effects for job layers
+    map.on('mouseenter', 'jobs-clusters', function() {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'jobs-clusters', function() {
+        map.getCanvas().style.cursor = '';
+    });
+
+    map.on('mouseenter', 'jobs-unclustered', function() {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'jobs-unclustered', function() {
         map.getCanvas().style.cursor = '';
     });
 </script>

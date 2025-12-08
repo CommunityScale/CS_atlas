@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.mapbox.com)",
+      "Bash(head:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
