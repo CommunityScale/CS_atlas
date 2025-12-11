@@ -1317,7 +1317,7 @@
                             0.2, '#ebe8fd',
                             0.5, '#ddb6db',
                             0.7, '#8795eb',
-                            0.9, '#3445b0',
+                            0.95, '#3445b0',
                             1, '#091a3f'
                         ],
                         // Increase radius as zoom increases
@@ -1731,6 +1731,11 @@
                 map.setLayoutProperty('submarkets-labels', 'visibility', 'visible');
             }
 
+            // Ensure municipalities layer stays on top
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
+            }
+
             // Hide legends
             document.getElementById('legend').classList.add('hidden');
             document.getElementById('sales-legend').classList.add('hidden');
@@ -1765,6 +1770,11 @@
             // Show sales listings layer
             if (map.getLayer('sales-listings')) {
                 map.setLayoutProperty('sales-listings', 'visibility', 'visible');
+            }
+
+            // Ensure municipalities layer stays on top
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
             }
 
             // Hide rental and jobs layers
@@ -1815,6 +1825,11 @@
                 map.setLayoutProperty('rental-listings', 'visibility', 'visible');
             }
 
+            // Ensure municipalities layer stays on top
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
+            }
+
             // Hide sales and jobs layers
             if (map.getLayer('sales-listings')) {
                 map.setLayoutProperty('sales-listings', 'visibility', 'none');
@@ -1861,6 +1876,11 @@
             // Show jobs heatmap layer
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'visible');
+            }
+
+            // Ensure municipalities layer is above heatmap (move to top of data layers)
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
             }
 
             // Hide sales and rental layers
