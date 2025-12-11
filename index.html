@@ -135,7 +135,7 @@
                             <option value="rental-listings">Recent rental listings</option>
                         </optgroup>
                         <optgroup label="Employment">
-                            <option value="jobs-clusters">Job Locations (2022)</option>
+                            <option value="jobs-heatmap">Job Locations (2022)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -780,29 +780,6 @@
             })
             .catch(error => console.error('Error fetching zip tileset metadata:', error));
 
-        // Add municipalities overlay source
-        map.addSource('municipalities-source', {
-            type: 'geojson',
-            data: 'SCmuni.geojson'
-        });
-
-        // Add municipalities outline layer (black outline, no fill)
-        map.addLayer({
-            id: 'municipalities-outline',
-            type: 'line',
-            source: 'municipalities-source',
-            paint: {
-                'line-color': '#000000',
-                'line-width': 1.5
-            },
-            layout: {
-                visibility: 'none'
-            },
-            filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
-        }, firstSymbolId);
-
-        console.log('Added municipalities overlay layer');
-
         // Load and process submarkets data
         fetch('Submarkets.geojson')
             .then(response => response.json())
@@ -1295,106 +1272,102 @@
         })
         .catch(error => console.error('Error loading rental listings:', error));
 
-        // Load CatawbaJobs2022 data with clustering
+        // Load CatawbaJobs2022 data for heatmap
         fetch('CatawbaJobs2022.geojson')
             .then(response => response.json())
             .then(data => {
                 console.log('Loaded CatawbaJobs2022 with', data.features.length, 'features');
 
-                // Add source with clustering enabled
+                // Add source without clustering for heatmap
                 map.addSource('jobs-source', {
                     type: 'geojson',
-                    data: data,
-                    cluster: true,
-                    clusterMaxZoom: 17, // Max zoom to cluster points on
-                    clusterRadius: 80, // Radius of each cluster when clustering points
-                    clusterProperties: {
-                        // Sum of c000 values for all points in cluster
-                        'sum_c000': ['+', ['get', 'c000']]
-                    }
+                    data: data
                 });
 
-                // Add clustered circle layer
+                // Add heatmap layer
                 map.addLayer({
-                    id: 'jobs-clusters',
-                    type: 'circle',
+                    id: 'jobs-heatmap',
+                    type: 'heatmap',
                     source: 'jobs-source',
-                    filter: ['has', 'point_count'],
+                    maxzoom: 15,
                     paint: {
-                        // Use interpolate for continuous sizing based on total job count
-                        'circle-radius': [
-                            'interpolate',
-                            ['linear'],
-                            ['get', 'sum_c000'],
-                            10, 10,      // 10 jobs -> 10px radius
-                            100, 15,     // 100 jobs -> 15px radius
-                            1000, 20,    // 1,000 jobs -> 20px radius
-                            5000, 25,    // 5,000 jobs -> 25px radius
-                            10000, 30,   // 10,000 jobs -> 30px radius
-                            50000, 35,   // 50,000 jobs -> 35px radius
-                            100000, 40   // 100,000 jobs -> 40px radius
-                        ],
-                        'circle-color': '#11b4da',
-                        'circle-opacity': 0.8,
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': '#ffffff'
-                    },
-                    layout: {
-                        visibility: 'none'
-                    }
-                }, firstSymbolId);
-
-                // Add cluster count label layer
-                map.addLayer({
-                    id: 'jobs-cluster-count',
-                    type: 'symbol',
-                    source: 'jobs-source',
-                    filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': [
-                            'number-format',
-                            ['get', 'sum_c000'],
-                            { 'max-fraction-digits': 0 }
-                        ],
-                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                        'text-size': 12,
-                        visibility: 'none'
-                    },
-                    paint: {
-                        'text-color': '#000000'
-                    }
-                });
-
-                // Add unclustered point layer sized by c000
-                map.addLayer({
-                    id: 'jobs-unclustered',
-                    type: 'circle',
-                    source: 'jobs-source',
-                    filter: ['!', ['has', 'point_count']],
-                    paint: {
-                        // Size circles based on c000 value
-                        'circle-radius': [
+                        // Increase weight based on job count (c000)
+                        'heatmap-weight': [
                             'interpolate',
                             ['linear'],
                             ['get', 'c000'],
-                            1, 4,   // c000 = 1 -> radius 4
-                            50, 8,  // c000 = 50 -> radius 8
-                            100, 12, // c000 = 100 -> radius 12
-                            200, 16  // c000 = 200 -> radius 16
+                            0, 0,
+                            100, 0.5,
+                            500, 1
                         ],
-                        'circle-color': '#11b4da',
-                        'circle-opacity': 0.7,
-                        'circle-stroke-width': 1,
-                        'circle-stroke-color': '#ffffff'
+                        // Increase intensity as zoom level increases
+                        'heatmap-intensity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            0, 1,
+                            15, 3
+                        ],
+                        // Color ramp for heatmap - viridis-style purple to teal
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(33,102,172,0)',
+                            0.2, '#ebe8fd',
+                            0.5, '#ddb6db',
+                            0.7, '#8795eb',
+                            0.9, '#3445b0',
+                            1, '#091a3f'
+                        ],
+                        // Increase radius as zoom increases
+                        'heatmap-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            0, 10,
+                            15, 50
+                        ],
+                        // Decrease opacity at higher zoom levels
+                        'heatmap-opacity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            7, 1,
+                            15, 0.5
+                        ]
                     },
                     layout: {
                         visibility: 'none'
                     }
                 }, firstSymbolId);
 
-                console.log('Added CatawbaJobs2022 layers with clustering');
+                console.log('Added CatawbaJobs2022 heatmap layer');
             })
             .catch(error => console.error('Error loading CatawbaJobs2022:', error));
+
+        // Add municipalities overlay (last so it sits on top of all data layers)
+        map.addSource('municipalities-source', {
+            type: 'geojson',
+            data: 'SCmuni.geojson'
+        });
+
+        // Add municipalities outline layer (black outline, no fill)
+        map.addLayer({
+            id: 'municipalities-outline',
+            type: 'line',
+            source: 'municipalities-source',
+            paint: {
+                'line-color': '#000000',
+                'line-width': 1.5
+            },
+            layout: {
+                visibility: 'none'
+            },
+            filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
+        }, firstSymbolId);
+
+        console.log('Added municipalities overlay layer on top of all data layers');
 
         // Initialize overlay UI based on count
         initializeOverlays();
@@ -1731,14 +1704,8 @@
             if (map.getLayer('rental-listings')) {
                 map.setLayoutProperty('rental-listings', 'visibility', 'none');
             }
-            if (map.getLayer('jobs-clusters')) {
-                map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
-            }
-            if (map.getLayer('jobs-cluster-count')) {
-                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
-            }
-            if (map.getLayer('jobs-unclustered')) {
-                map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
             }
             return;
         }
@@ -1804,14 +1771,8 @@
             if (map.getLayer('rental-listings')) {
                 map.setLayoutProperty('rental-listings', 'visibility', 'none');
             }
-            if (map.getLayer('jobs-clusters')) {
-                map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
-            }
-            if (map.getLayer('jobs-cluster-count')) {
-                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
-            }
-            if (map.getLayer('jobs-unclustered')) {
-                map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
             }
 
             // Show legend for sales listings
@@ -1858,14 +1819,8 @@
             if (map.getLayer('sales-listings')) {
                 map.setLayoutProperty('sales-listings', 'visibility', 'none');
             }
-            if (map.getLayer('jobs-clusters')) {
-                map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
-            }
-            if (map.getLayer('jobs-cluster-count')) {
-                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
-            }
-            if (map.getLayer('jobs-unclustered')) {
-                map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
             }
 
             // Show legend for rental listings
@@ -1883,8 +1838,8 @@
             return;
         }
 
-        // Handle jobs-clusters layer
-        if (layerType === 'jobs-clusters') {
+        // Handle jobs-heatmap layer
+        if (layerType === 'jobs-heatmap') {
             // Hide tract and zip outlines
             if (map.getLayer('tracts-outline')) {
                 map.setLayoutProperty('tracts-outline', 'visibility', 'none');
@@ -1903,15 +1858,9 @@
                 map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
             }
 
-            // Show jobs layers
-            if (map.getLayer('jobs-clusters')) {
-                map.setLayoutProperty('jobs-clusters', 'visibility', 'visible');
-            }
-            if (map.getLayer('jobs-cluster-count')) {
-                map.setLayoutProperty('jobs-cluster-count', 'visibility', 'visible');
-            }
-            if (map.getLayer('jobs-unclustered')) {
-                map.setLayoutProperty('jobs-unclustered', 'visibility', 'visible');
+            // Show jobs heatmap layer
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'visible');
             }
 
             // Hide sales and rental layers
@@ -1928,7 +1877,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
 
             // Store current layer
-            currentDataLayer = 'jobs-clusters';
+            currentDataLayer = 'jobs-heatmap';
 
             return;
         }
@@ -1956,14 +1905,8 @@
         if (map.getLayer('rental-listings')) {
             map.setLayoutProperty('rental-listings', 'visibility', 'none');
         }
-        if (map.getLayer('jobs-clusters')) {
-            map.setLayoutProperty('jobs-clusters', 'visibility', 'none');
-        }
-        if (map.getLayer('jobs-cluster-count')) {
-            map.setLayoutProperty('jobs-cluster-count', 'visibility', 'none');
-        }
-        if (map.getLayer('jobs-unclustered')) {
-            map.setLayoutProperty('jobs-unclustered', 'visibility', 'none');
+        if (map.getLayer('jobs-heatmap')) {
+            map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
         }
 
         // Show/hide tract outline based on layer type
@@ -2593,27 +2536,7 @@
                 })
                 .catch(error => console.error('Error re-adding zip layer after basemap change:', error));
 
-            // Re-add overlay sources and layers
-            map.addSource('municipalities-source', {
-                type: 'geojson',
-                data: 'SCmuni.geojson'
-            });
-
-            map.addLayer({
-                id: 'municipalities-outline',
-                type: 'line',
-                source: 'municipalities-source',
-                paint: {
-                    'line-color': '#000000',
-                    'line-width': 1.5
-                },
-                layout: {
-                    visibility: 'none'
-                },
-                filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
-            }, firstSymbolId);
-
-            console.log('Re-added municipalities overlay layer');
+            // Re-add overlay sources and layers (municipalities added last to be on top)
 
             // Re-add submarkets source and layers
             map.addSource('submarkets-source', {
@@ -2879,103 +2802,99 @@
                 console.log('Re-added rental listings layer with range-based colors');
             }
 
-            // Re-add jobs layers with clustering
+            // Re-add jobs heatmap layer
             fetch('CatawbaJobs2022.geojson')
                 .then(response => response.json())
                 .then(data => {
-                    // Add source with clustering enabled
+                    // Add source without clustering for heatmap
                     map.addSource('jobs-source', {
                         type: 'geojson',
-                        data: data,
-                        cluster: true,
-                        clusterMaxZoom: 17,
-                        clusterRadius: 80,
-                        clusterProperties: {
-                            // Sum of c000 values for all points in cluster
-                            'sum_c000': ['+', ['get', 'c000']]
-                        }
+                        data: data
                     });
 
-                    // Add clustered circle layer
+                    // Add heatmap layer
                     map.addLayer({
-                        id: 'jobs-clusters',
-                        type: 'circle',
+                        id: 'jobs-heatmap',
+                        type: 'heatmap',
                         source: 'jobs-source',
-                        filter: ['has', 'point_count'],
+                        maxzoom: 15,
                         paint: {
-                            // Use interpolate for continuous sizing based on total job count
-                            'circle-radius': [
-                                'interpolate',
-                                ['linear'],
-                                ['get', 'sum_c000'],
-                                10, 10,      // 10 jobs -> 10px radius
-                                100, 15,     // 100 jobs -> 15px radius
-                                1000, 20,    // 1,000 jobs -> 20px radius
-                                5000, 25,    // 5,000 jobs -> 25px radius
-                                10000, 30,   // 10,000 jobs -> 30px radius
-                                50000, 35,   // 50,000 jobs -> 35px radius
-                                100000, 40   // 100,000 jobs -> 40px radius
-                            ],
-                            'circle-color': '#11b4da',
-                            'circle-opacity': 0.8,
-                            'circle-stroke-width': 2,
-                            'circle-stroke-color': '#ffffff'
-                        },
-                        layout: {
-                            visibility: 'none'
-                        }
-                    }, firstSymbolId);
-
-                    // Add cluster count label layer
-                    map.addLayer({
-                        id: 'jobs-cluster-count',
-                        type: 'symbol',
-                        source: 'jobs-source',
-                        filter: ['has', 'point_count'],
-                        layout: {
-                            'text-field': [
-                                'number-format',
-                                ['get', 'sum_c000'],
-                                { 'max-fraction-digits': 0 }
-                            ],
-                            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                            'text-size': 12,
-                            visibility: 'none'
-                        },
-                        paint: {
-                            'text-color': '#000000'
-                        }
-                    });
-
-                    // Add unclustered point layer sized by c000
-                    map.addLayer({
-                        id: 'jobs-unclustered',
-                        type: 'circle',
-                        source: 'jobs-source',
-                        filter: ['!', ['has', 'point_count']],
-                        paint: {
-                            'circle-radius': [
+                            // Increase weight based on job count (c000)
+                            'heatmap-weight': [
                                 'interpolate',
                                 ['linear'],
                                 ['get', 'c000'],
-                                1, 4,
-                                50, 8,
-                                100, 12,
-                                200, 16
+                                0, 0,
+                                100, 0.5,
+                                500, 1
                             ],
-                            'circle-color': '#11b4da',
-                            'circle-opacity': 0.7,
-                            'circle-stroke-width': 1,
-                            'circle-stroke-color': '#ffffff'
+                            // Increase intensity as zoom level increases
+                            'heatmap-intensity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0, 1,
+                                15, 3
+                            ],
+                            // Color ramp for heatmap - blue (low) to red (high)
+                            'heatmap-color': [
+                                'interpolate',
+                                ['linear'],
+                                ['heatmap-density'],
+                                0, 'rgba(33,102,172,0)',
+                                0.2, 'rgb(103,169,207)',
+                                0.4, 'rgb(209,229,240)',
+                                0.6, 'rgb(253,219,199)',
+                                0.8, 'rgb(239,138,98)',
+                                1, 'rgb(178,24,43)'
+                            ],
+                            // Increase radius as zoom increases
+                            'heatmap-radius': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0, 2,
+                                15, 20
+                            ],
+                            // Decrease opacity at higher zoom levels
+                            'heatmap-opacity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                7, 1,
+                                15, 0.5
+                            ]
                         },
                         layout: {
                             visibility: 'none'
                         }
                     }, firstSymbolId);
 
-                    console.log('Re-added jobs layers with clustering');
+                    console.log('Re-added jobs heatmap layer');
                 })
                 .catch(error => console.error('Error re-loading jobs:', error));
+
+            // Re-add municipalities layer (last so it sits on top of all data layers)
+            map.addSource('municipalities-source', {
+                type: 'geojson',
+                data: 'SCmuni.geojson'
+            });
+
+            map.addLayer({
+                id: 'municipalities-outline',
+                type: 'line',
+                source: 'municipalities-source',
+                paint: {
+                    'line-color': '#000000',
+                    'line-width': 1.5
+                },
+                layout: {
+                    visibility: 'none'
+                },
+                filter: ['in', ['get', 'COUNTY_NAM'], ['literal', COUNTIES.map(c => c.name.replace(' County', '').toUpperCase())]]
+            }, firstSymbolId);
+
+            console.log('Re-added municipalities overlay layer on top of all data layers');
 
             // Re-initialize overlay UI
             initializeOverlays();
@@ -3052,7 +2971,7 @@
             updateDataLayer(null, null);
             // Reset to "Select data layer"
             layerSelect.value = '';
-        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-clusters') {
+        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-heatmap') {
             // Handle non-quantile layers (no attribute split needed)
             const selectedOption = e.target.options[e.target.selectedIndex];
             currentLayerName = selectedOption.text;
@@ -3405,57 +3324,7 @@
         map.getCanvas().style.cursor = '';
     });
 
-    // Add click handler for job clusters
-    map.on('click', 'jobs-clusters', function(e) {
-        const features = map.queryRenderedFeatures(e.point, {
-            layers: ['jobs-clusters']
-        });
-        const clusterId = features[0].properties.cluster_id;
-        map.getSource('jobs-source').getClusterExpansionZoom(
-            clusterId,
-            function(err, zoom) {
-                if (err) return;
-                map.easeTo({
-                    center: features[0].geometry.coordinates,
-                    zoom: zoom
-                });
-            }
-        );
-    });
-
-    // Add click handler for unclustered job points
-    map.on('click', 'jobs-unclustered', function(e) {
-        const props = e.features[0].properties;
-        const jobCount = props.c000 ? Math.round(props.c000) : 'N/A';
-
-        new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`
-                <div class="popup-content">
-                    <div class="popup-header">Job Location</div>
-                    <p><strong>Total Jobs:</strong> ${jobCount}</p>
-                    <p><strong>Location ID:</strong> ${props.id || 'N/A'}</p>
-                </div>
-            `)
-            .addTo(map);
-    });
-
-    // Add hover effects for job layers
-    map.on('mouseenter', 'jobs-clusters', function() {
-        map.getCanvas().style.cursor = 'pointer';
-    });
-
-    map.on('mouseleave', 'jobs-clusters', function() {
-        map.getCanvas().style.cursor = '';
-    });
-
-    map.on('mouseenter', 'jobs-unclustered', function() {
-        map.getCanvas().style.cursor = 'pointer';
-    });
-
-    map.on('mouseleave', 'jobs-unclustered', function() {
-        map.getCanvas().style.cursor = '';
-    });
+    // Note: Heatmap layers do not support click/hover interactions
 </script>
 
 </body>
