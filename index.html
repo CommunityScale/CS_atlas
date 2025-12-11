@@ -803,57 +803,108 @@
 
         console.log('Added municipalities overlay layer');
 
-        // Add submarkets source and layers
-        map.addSource('submarkets-source', {
-            type: 'geojson',
-            data: 'Submarkets.geojson'
-        });
+        // Load and process submarkets data
+        fetch('Submarkets.geojson')
+            .then(response => response.json())
+            .then(data => {
+                // Add submarkets source for fill and outline
+                map.addSource('submarkets-source', {
+                    type: 'geojson',
+                    data: data
+                });
 
-        // Add submarkets fill layer (transparent blue fill)
-        map.addLayer({
-            id: 'submarkets-fill',
-            type: 'fill',
-            source: 'submarkets-source',
-            paint: {
-                'fill-color': '#ec5d9f',
-                'fill-opacity': 0.15
-            },
-            layout: {
-                visibility: 'none'
-            }
-        }, firstSymbolId);
+                // Create deduplicated label points - one per unique SubgeoName
+                const labelPoints = {};
+                data.features.forEach(feature => {
+                    const name = feature.properties.SubgeoName;
+                    if (!labelPoints[name] && feature.geometry) {
+                        // Calculate centroid for the first feature with this name
+                        let centroid;
+                        if (feature.geometry.type === 'Polygon') {
+                            const coords = feature.geometry.coordinates[0];
+                            centroid = coords.reduce((acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]], [0, 0]);
+                            centroid = [centroid[0] / coords.length, centroid[1] / coords.length];
+                        } else if (feature.geometry.type === 'MultiPolygon') {
+                            const coords = feature.geometry.coordinates[0][0];
+                            centroid = coords.reduce((acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]], [0, 0]);
+                            centroid = [centroid[0] / coords.length, centroid[1] / coords.length];
+                        }
 
-        // Add submarkets outline layer (thin blue outline)
-        map.addLayer({
-            id: 'submarkets-outline',
-            type: 'line',
-            source: 'submarkets-source',
-            paint: {
-                'line-color': '#ec5d9f',
-                'line-width': 1
-            },
-            layout: {
-                visibility: 'none'
-            }
-        }, firstSymbolId);
+                        if (centroid) {
+                            labelPoints[name] = {
+                                type: 'Feature',
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: centroid
+                                },
+                                properties: {
+                                    SubgeoName: name
+                                }
+                            };
+                        }
+                    }
+                });
 
-        // Add submarkets labels layer
-        map.addLayer({
-            id: 'submarkets-labels',
-            type: 'symbol',
-            source: 'submarkets-source',
-            layout: {
-                'text-field': ['get', 'SubgeoName'],
-                'text-font': ['Roboto Bold', 'Arial Unicode MS Bold'],
-                'text-size': 14,
-                visibility: 'none'
-            },
-            paint: {
-                'text-color': '#ec5d9f',
-                'text-halo-color': '#ffffff',
-                'text-halo-width': 2
-            }
-        });
+                // Add deduplicated labels source
+                map.addSource('submarkets-labels-source', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: Object.values(labelPoints)
+                    }
+                });
+
+                // Add submarkets fill layer (transparent blue fill)
+                map.addLayer({
+                    id: 'submarkets-fill',
+                    type: 'fill',
+                    source: 'submarkets-source',
+                    paint: {
+                        'fill-color': '#ec5d9f',
+                        'fill-opacity': 0.15
+                    },
+                    layout: {
+                        visibility: 'none'
+                    }
+                }, firstSymbolId);
+
+                // Add submarkets outline layer (thin blue outline)
+                map.addLayer({
+                    id: 'submarkets-outline',
+                    type: 'line',
+                    source: 'submarkets-source',
+                    paint: {
+                        'line-color': '#ec5d9f',
+                        'line-width': 1
+                    },
+                    layout: {
+                        visibility: 'none'
+                    }
+                }, firstSymbolId);
+
+                // Add submarkets labels layer using deduplicated source
+                map.addLayer({
+                    id: 'submarkets-labels',
+                    type: 'symbol',
+                    source: 'submarkets-labels-source',
+                    layout: {
+                        'text-field': ['get', 'SubgeoName'],
+                        'text-font': ['Roboto Bold', 'Arial Unicode MS Bold'],
+                        'text-size': 14,
+                        'text-allow-overlap': true,
+                        'text-ignore-placement': true,
+                        visibility: 'none'
+                    },
+                    paint: {
+                        'text-color': '#ec5d9f',
+                        'text-halo-color': '#ffffff',
+                        'text-halo-width': 2
+                    }
+                });
+
+                console.log('Added submarkets overlay layers with', Object.keys(labelPoints).length, 'unique labels');
+            })
+            .catch(error => console.error('Error loading submarkets:', error));
 
         console.log('Added submarkets overlay layers');
 
@@ -1097,10 +1148,10 @@
                 'match',
                 ['get', 'priceClass'],
                 1, '#e1e1e1',  // Class 1
-                2, '#d3d85d',  // Class 2
-                3, '#89aa42',  // Class 3
-                4, '#667b39',  // Class 4
-                5, '#8e2e36',  // Class 5
+                2, '#8795eb',  // Class 2
+                3, '#3445b0',  // Class 3
+                4, '#091a3f',  // Class 4
+                5, '#ec6448',  // Class 5
                 '#e1e1e1'      // Default (no valid price) - grey
             ];
 
@@ -1216,10 +1267,10 @@
                 'match',
                 ['get', 'priceClass'],
                 1, '#e1e1e1',  // Class 1
-                2, '#d3d85d',  // Class 2
-                3, '#89aa42',  // Class 3
-                4, '#667b39',  // Class 4
-                5, '#8e2e36',  // Class 5
+                2, '#8795eb',  // Class 2
+                3, '#3445b0',  // Class 3
+                4, '#091a3f',  // Class 4
+                5, '#ec6448',  // Class 5
                 '#e1e1e1'      // Default (no valid price) - grey
             ];
 
@@ -2269,11 +2320,11 @@
         legendContent.innerHTML = '';
 
         const priceClasses = [
-            { class: 1, color: '#e1e1e1', label: 'Attainable to <80% AMI income household' },
-            { class: 2, color: '#d3d85d', label: 'Attainable to 80-100% AMI income household' },
-            { class: 3, color: '#89aa42', label: 'Attainable to 100-120% AMI income household' },
-            { class: 4, color: '#667b39', label: 'Attainable to 120-150% AMI income household' },
-            { class: 5, color: '#8e2e36', label: 'Not attainable for workforce household' }
+            { class: 1, color: '#e1e1e1', label: 'Price range for a <80% AMI income household' },
+            { class: 2, color: '#8795eb', label: 'Price range for a 80-100% AMI income household' },
+            { class: 3, color: '#3445b0', label: 'Price range for a 100-120% AMI income household' },
+            { class: 4, color: '#091a3f', label: 'Price range for a 120-150% AMI income household' },
+            { class: 5, color: '#ec6448', label: 'Price range for a >150% AMI income household' }
         ];
 
         priceClasses.forEach(pc => {
@@ -2358,16 +2409,32 @@
                 }
             });
 
-            // Add county bounds using predefined bounding boxes
+            // Add county bounds by querying actual geometry (same approach as submarkets)
             if (selectedCountyIds.length > 0) {
                 const countyNames = selectedCountyIds.map(id => id.replace('county:', ''));
-                countyNames.forEach(name => {
+                const countyGEOIDs = countyNames.map(name => {
                     const county = COUNTIES.find(c => c.name.replace(' County', '') === name);
-                    if (county && county.bounds) {
-                        // Extend bounds with the county's predefined bounding box
-                        bounds.extend(county.bounds[0]); // southwest corner
-                        bounds.extend(county.bounds[1]); // northeast corner
-                        console.log('Added bounds for county:', name, county.bounds);
+                    return county ? county.geoid : null;
+                }).filter(id => id !== null);
+
+                // Query actual county features from the vector tile source
+                const countyFeatures = map.querySourceFeatures('counties-source', {
+                    sourceLayer: 'states',
+                    filter: ['in', ['get', 'GEOID'], ['literal', countyGEOIDs]]
+                });
+
+                // Calculate bounds from actual geometry coordinates (same as submarkets)
+                countyFeatures.forEach(feature => {
+                    if (feature.geometry.type === 'Polygon') {
+                        feature.geometry.coordinates[0].forEach(coord => {
+                            bounds.extend(coord);
+                        });
+                    } else if (feature.geometry.type === 'MultiPolygon') {
+                        feature.geometry.coordinates.forEach(polygon => {
+                            polygon[0].forEach(coord => {
+                                bounds.extend(coord);
+                            });
+                        });
                     }
                 });
             }
