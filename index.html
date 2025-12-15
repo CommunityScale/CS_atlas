@@ -135,7 +135,9 @@
                             <option value="rental-listings">Recent rental listings</option>
                         </optgroup>
                         <optgroup label="Employment">
-                            <option value="jobs-heatmap">Job Locations (2022)</option>
+                            <option value="jobs-heatmap">Job Locations - All Jobs (2022)</option>
+                            <option value="jobs-heatmap-cns15">Job Locations - Education (2022)</option>
+                            <option value="jobs-heatmap-cns16">Job Locations - Healthcare (2022)</option>
                         </optgroup>
                         <optgroup label="Personas">
                             <option value="persona-nurse">Single-earner nurse</option>
@@ -1739,6 +1741,122 @@
                     }
                 }, firstSymbolId);
 
+                // Add heatmap layer for CNS15 (Retail Trade)
+                map.addLayer({
+                    id: 'jobs-heatmap-cns15',
+                    type: 'heatmap',
+                    source: 'jobs-source',
+                    maxzoom: 15,
+                    paint: {
+                        // Increase weight based on retail trade job count (cns15)
+                        'heatmap-weight': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'cns15'],
+                            0, 0,
+                            100, 0.5,
+                            500, 1
+                        ],
+                        // Increase intensity as zoom level increases
+                        'heatmap-intensity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            0, 1,
+                            15, 3
+                        ],
+                        // Color ramp for heatmap - viridis-style purple to teal
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(33,102,172,0)',
+                            0.2, '#ebe8fd',
+                            0.5, '#ddb6db',
+                            0.7, '#8795eb',
+                            0.99, '#3445b0',
+                            1, '#091a3f'
+                        ],
+                        // Increase radius as zoom increases
+                        'heatmap-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            0, 10,
+                            15, 50
+                        ],
+                        // Decrease opacity at higher zoom levels
+                        'heatmap-opacity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            7, 1,
+                            15, 0.5
+                        ]
+                    },
+                    layout: {
+                        visibility: 'none'
+                    }
+                }, firstSymbolId);
+
+                // Add heatmap layer for CNS16
+                map.addLayer({
+                    id: 'jobs-heatmap-cns16',
+                    type: 'heatmap',
+                    source: 'jobs-source',
+                    maxzoom: 15,
+                    paint: {
+                        // Increase weight based on cns16 job count
+                        'heatmap-weight': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'cns16'],
+                            0, 0,
+                            100, 0.5,
+                            500, 1
+                        ],
+                        // Increase intensity as zoom level increases
+                        'heatmap-intensity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            0, 1,
+                            15, 3
+                        ],
+                        // Color ramp for heatmap - viridis-style purple to teal
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(33,102,172,0)',
+                            0.2, '#ebe8fd',
+                            0.5, '#ddb6db',
+                            0.7, '#8795eb',
+                            0.99, '#3445b0',
+                            1, '#091a3f'
+                        ],
+                        // Increase radius as zoom increases
+                        'heatmap-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            0, 10,
+                            15, 50
+                        ],
+                        // Decrease opacity at higher zoom levels
+                        'heatmap-opacity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            7, 1,
+                            15, 0.5
+                        ]
+                    },
+                    layout: {
+                        visibility: 'none'
+                    }
+                }, firstSymbolId);
+
                 console.log('Added CatawbaJobs2022 heatmap layer');
             })
             .catch(error => console.error('Error loading CatawbaJobs2022:', error));
@@ -2106,6 +2224,12 @@
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
             }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
+            }
             if (map.getLayer('persona-nurse')) {
                 map.setLayoutProperty('persona-nurse', 'visibility', 'none');
             }
@@ -2191,6 +2315,12 @@
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
             }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
+            }
             if (map.getLayer('persona-nurse')) {
                 map.setLayoutProperty('persona-nurse', 'visibility', 'none');
             }
@@ -2251,6 +2381,12 @@
             }
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
             }
             if (map.getLayer('persona-nurse')) {
                 map.setLayoutProperty('persona-nurse', 'visibility', 'none');
@@ -2319,6 +2455,13 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            // Hide the other jobs heatmaps
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
+            }
 
             // Hide legends
             document.getElementById('legend').classList.add('hidden');
@@ -2329,6 +2472,134 @@
 
             // Store current layer
             currentDataLayer = 'jobs-heatmap';
+
+            return;
+        }
+
+        // Handle jobs-heatmap-cns15 layer
+        if (layerType === 'jobs-heatmap-cns15') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+            // Hide submarkets
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+
+            // Show jobs heatmap cns15 layer
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'visible');
+            }
+
+            // Ensure municipalities layer is above heatmap (move to top of data layers)
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
+            }
+
+            // Hide sales and rental layers
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-nurse')) {
+                map.setLayoutProperty('persona-nurse', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-teacher')) {
+                map.setLayoutProperty('persona-teacher', 'visibility', 'none');
+            }
+            // Hide the other jobs heatmaps
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
+            }
+
+            // Hide legends
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.add('hidden');
+            document.getElementById('nurse-legend').classList.add('hidden');
+            document.getElementById('teacher-legend').classList.add('hidden');
+
+            // Store current layer
+            currentDataLayer = 'jobs-heatmap-cns15';
+
+            return;
+        }
+
+        // Handle jobs-heatmap-cns16 layer
+        if (layerType === 'jobs-heatmap-cns16') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+            // Hide submarkets
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+
+            // Show jobs heatmap cns16 layer
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'visible');
+            }
+
+            // Ensure municipalities layer is above heatmap (move to top of data layers)
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
+            }
+
+            // Hide sales and rental layers
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-nurse')) {
+                map.setLayoutProperty('persona-nurse', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-teacher')) {
+                map.setLayoutProperty('persona-teacher', 'visibility', 'none');
+            }
+            // Hide the other jobs heatmaps
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+
+            // Hide legends
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.add('hidden');
+            document.getElementById('nurse-legend').classList.add('hidden');
+            document.getElementById('teacher-legend').classList.add('hidden');
+
+            // Store current layer
+            currentDataLayer = 'jobs-heatmap-cns16';
 
             return;
         }
@@ -2372,6 +2643,12 @@
             }
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
             }
 
             // Show legend for nurse persona
@@ -2431,6 +2708,12 @@
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
             }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
+            }
             if (map.getLayer('persona-nurse')) {
                 map.setLayoutProperty('persona-nurse', 'visibility', 'none');
             }
@@ -2477,6 +2760,12 @@
         }
         if (map.getLayer('jobs-heatmap')) {
             map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
+        }
+        if (map.getLayer('jobs-heatmap-cns15')) {
+            map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+        }
+        if (map.getLayer('jobs-heatmap-cns16')) {
+            map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
         }
         if (map.getLayer('persona-nurse')) {
             map.setLayoutProperty('persona-nurse', 'visibility', 'none');
@@ -3506,6 +3795,122 @@
                         }
                     }, firstSymbolId);
 
+                    // Add heatmap layer for CNS15 (Retail Trade)
+                    map.addLayer({
+                        id: 'jobs-heatmap-cns15',
+                        type: 'heatmap',
+                        source: 'jobs-source',
+                        maxzoom: 15,
+                        paint: {
+                            // Increase weight based on retail trade job count (cns15)
+                            'heatmap-weight': [
+                                'interpolate',
+                                ['linear'],
+                                ['get', 'cns15'],
+                                0, 0,
+                                100, 0.5,
+                                500, 1
+                            ],
+                            // Increase intensity as zoom level increases
+                            'heatmap-intensity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0, 1,
+                                15, 3
+                            ],
+                            // Color ramp for heatmap - viridis-style purple to teal
+                            'heatmap-color': [
+                                'interpolate',
+                                ['linear'],
+                                ['heatmap-density'],
+                                0, 'rgba(33,102,172,0)',
+                                0.2, '#ebe8fd',
+                                0.5, '#ddb6db',
+                                0.7, '#8795eb',
+                                0.99, '#3445b0',
+                                1, '#091a3f'
+                            ],
+                            // Increase radius as zoom increases
+                            'heatmap-radius': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0, 10,
+                                15, 50
+                            ],
+                            // Decrease opacity at higher zoom levels
+                            'heatmap-opacity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                7, 1,
+                                15, 0.5
+                            ]
+                        },
+                        layout: {
+                            visibility: 'none'
+                        }
+                    }, firstSymbolId);
+
+                    // Add heatmap layer for CNS16
+                    map.addLayer({
+                        id: 'jobs-heatmap-cns16',
+                        type: 'heatmap',
+                        source: 'jobs-source',
+                        maxzoom: 15,
+                        paint: {
+                            // Increase weight based on cns16 job count
+                            'heatmap-weight': [
+                                'interpolate',
+                                ['linear'],
+                                ['get', 'cns16'],
+                                0, 0,
+                                100, 0.5,
+                                500, 1
+                            ],
+                            // Increase intensity as zoom level increases
+                            'heatmap-intensity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0, 1,
+                                15, 3
+                            ],
+                            // Color ramp for heatmap - viridis-style purple to teal
+                            'heatmap-color': [
+                                'interpolate',
+                                ['linear'],
+                                ['heatmap-density'],
+                                0, 'rgba(33,102,172,0)',
+                                0.2, '#ebe8fd',
+                                0.5, '#ddb6db',
+                                0.7, '#8795eb',
+                                0.99, '#3445b0',
+                                1, '#091a3f'
+                            ],
+                            // Increase radius as zoom increases
+                            'heatmap-radius': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0, 10,
+                                15, 50
+                            ],
+                            // Decrease opacity at higher zoom levels
+                            'heatmap-opacity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                7, 1,
+                                15, 0.5
+                            ]
+                        },
+                        layout: {
+                            visibility: 'none'
+                        }
+                    }, firstSymbolId);
+
                     console.log('Re-added jobs heatmap layer');
                 })
                 .catch(error => console.error('Error re-loading jobs:', error));
@@ -3607,7 +4012,7 @@
             updateDataLayer(null, null);
             // Reset to "Select data layer"
             layerSelect.value = '';
-        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-heatmap' || selectedValue === 'persona-nurse' || selectedValue === 'persona-teacher') {
+        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-heatmap' || selectedValue === 'jobs-heatmap-cns15' || selectedValue === 'jobs-heatmap-cns16' || selectedValue === 'persona-nurse' || selectedValue === 'persona-teacher') {
             // Handle non-quantile layers (no attribute split needed)
             const selectedOption = e.target.options[e.target.selectedIndex];
             currentLayerName = selectedOption.text;
