@@ -118,6 +118,7 @@
                             <option value="tract:total_cb_rt_23">Total cost burden rate (2023)</option>
                             <option value="tract:hh_change_23_20">Household change 2020-2023 (%)</option>
                             <option value="tract:median_hh_income_23">Median household income (2023)</option>
+                            <option value="tract:sh_commute_45_or_less">Share with commute longer than 45 min</option>
                             <!-- <option value="tract:pop_23">Population (2023)</option> -->
                             <!-- <option value="tract:housing_unit_count_23">Housing unit count (2023)</option> -->
                             <!-- <option value="tract:total_hh_23">Total households (2023)</option> -->
@@ -142,6 +143,7 @@
                         <optgroup label="Personas">
                             <option value="persona-nurse">Single-earner nurse</option>
                             <option value="persona-teacher">Single-earner teacher</option>
+                            <option value="persona-teacher-firefighter">Two-earner household, teacher and firefighter</option>
                         </optgroup>
                     </select>
                 </div>
@@ -186,6 +188,14 @@
                     <h3 class="font-medium mb-2 text-black">Where can a single-earner teacher find housing?</h3>
                     <p class="text-xs text-gray-600 mb-2">Sales: $174,500-$290,500 <br> Rentals: $900-$1,475/mo</p>
                     <div id="teacher-legend-content" class="space-y-1 text-sm text-black">
+                    </div>
+                </div>
+
+                <!-- Teacher-firefighter persona legend -->
+                <div id="teacher-firefighter-legend" class="mt-4 pb-4 hidden border-t border-gray-300 pt-4">
+                    <h3 class="font-medium mb-2 text-black">Where can a two-earner household (teacher and firefighter) find housing?</h3>
+                    <p class="text-xs text-gray-600 mb-2">Sales: $349,000-$436,000 <br> Rentals: $1,800-$2,225/mo</p>
+                    <div id="teacher-firefighter-legend-content" class="space-y-1 text-sm text-black">
                     </div>
                 </div>
             </div>
@@ -378,6 +388,10 @@
         'tract:total_hh_23': {
             source: 'U.S. Census Bureau, American Community Survey 5-Year Estimates (2019-2023)'
         },
+        'tract:sh_commute_45_or_less': {
+            source: 'U.S. Census Bureau, American Community Survey 5-Year Estimates (2019-2023)',
+            description: 'Percentage of workers with a commute time longer than 45 minutes.'
+        },
         'zip:zhvi_20': {
             source: 'Zillow Home Value Index (ZHVI)',
             description: 'Typical home value in 2020. ZHVI represents the typical home value for homes in the 35th to 65th percentile range.'
@@ -453,6 +467,10 @@
         'persona-teacher': {
             source: 'Recent for-sale property listings',
             description: 'Listings affordable to a single-earner teacher household, with prices between $174,500 and $290,500. Colored by number of bedrooms to help identify suitable housing options.'
+        },
+        'persona-teacher-firefighter': {
+            source: 'Recent for-sale and rental property listings',
+            description: 'Listings affordable to a two-earner household (teacher and firefighter), with home prices between $349,000 and $436,000, and rentals between $1,800 and $2,225 per month. Colored by number of bedrooms to help identify suitable housing options.'
         }
     };
 
@@ -1549,6 +1567,196 @@
             }, firstSymbolId);
 
             console.log('Added teacher persona layer with category-based colors');
+
+            // Create teacher-firefighter persona layer (Two-earner household, teacher and firefighter)
+            // Sales: $349,000 - $436,000, Rentals: $1,800 - $2,225
+
+            // Filter and categorize sales listings
+            const teacherFirefighterSalesFeatures = salesListingsData
+                .filter(d => {
+                    // Check coordinates are valid
+                    if (!d.latitude || !d.longitude || isNaN(parseFloat(d.latitude)) || isNaN(parseFloat(d.longitude))) {
+                        return false;
+                    }
+                    // Check if county matches one of our counties
+                    const countyNames = COUNTIES.map(c => c.name.replace(' County', ''));
+                    if (!d.county || !countyNames.includes(d.county)) {
+                        return false;
+                    }
+                    // Filter by listing date - only show 2023, 2024, or 2025
+                    if (d.listedDate && d.listedDate !== 'NA') {
+                        try {
+                            const date = new Date(d.listedDate);
+                            const year = date.getFullYear();
+                            if (year < 2023 || year > 2025) {
+                                return false;
+                            }
+                        } catch (e) {
+                            return false;
+                        }
+                    } else {
+                        return false; // Exclude listings without a valid date
+                    }
+                    // Filter by price range - only show listings within range
+                    if (d.price && d.price !== 'NA') {
+                        const price = parseFloat(d.price);
+                        return !isNaN(price) && price >= 349000 && price <= 436000;
+                    }
+                    return false;
+                })
+                .map(d => {
+                    // Determine category based on bedrooms (all are within price range)
+                    const bedrooms = d.bedrooms && d.bedrooms !== 'NA' ? parseInt(d.bedrooms) : null;
+                    let category = 'sale-right-sized'; // Default
+
+                    if (bedrooms && bedrooms >= 2) {
+                        category = 'sale-right-sized'; // 2+ bedrooms
+                    } else {
+                        category = 'sale-too-small'; // < 2 bedrooms
+                    }
+
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [parseFloat(d.longitude), parseFloat(d.latitude)]
+                        },
+                        properties: {
+                            address: d.formattedAddress || d.addressLine1,
+                            price: d.price,
+                            propertyType: d.propertyType,
+                            bedrooms: d.bedrooms,
+                            bathrooms: d.bathrooms,
+                            squareFootage: d.squareFootage,
+                            status: d.status,
+                            county: d.county,
+                            listedDate: d.listedDate,
+                            category: category,
+                            listingType: 'sale'
+                        }
+                    };
+                });
+
+            // Filter and categorize rental listings
+            const teacherFirefighterRentalFeatures = rentalListingsData
+                .filter(d => {
+                    // Check coordinates are valid
+                    if (!d.latitude || !d.longitude || isNaN(parseFloat(d.latitude)) || isNaN(parseFloat(d.longitude))) {
+                        return false;
+                    }
+                    // Check if county matches one of our counties
+                    const countyNames = COUNTIES.map(c => c.name.replace(' County', ''));
+                    if (!d.county || !countyNames.includes(d.county)) {
+                        return false;
+                    }
+                    // Filter by listing date - only show 2023, 2024, or 2025
+                    if (d.listedDate && d.listedDate !== 'NA') {
+                        try {
+                            const date = new Date(d.listedDate);
+                            const year = date.getFullYear();
+                            if (year < 2023 || year > 2025) {
+                                return false;
+                            }
+                        } catch (e) {
+                            return false;
+                        }
+                    } else {
+                        return false; // Exclude listings without a valid date
+                    }
+                    // Filter by rental price range - only show rentals within range
+                    if (d.price && d.price !== 'NA') {
+                        const price = parseFloat(d.price);
+                        return !isNaN(price) && price >= 1800 && price <= 2225;
+                    }
+                    return false;
+                })
+                .map(d => {
+                    // Determine category based on bedrooms (all are within price range)
+                    const bedrooms = d.bedrooms && d.bedrooms !== 'NA' ? parseInt(d.bedrooms) : null;
+                    let category = 'rental-right-sized'; // Default
+
+                    if (bedrooms && bedrooms >= 2) {
+                        category = 'rental-right-sized'; // 2+ bedrooms
+                    } else {
+                        category = 'rental-too-small'; // < 2 bedrooms
+                    }
+
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [parseFloat(d.longitude), parseFloat(d.latitude)]
+                        },
+                        properties: {
+                            address: d.formattedAddress || d.addressLine1,
+                            price: d.price,
+                            propertyType: d.propertyType,
+                            bedrooms: d.bedrooms,
+                            bathrooms: d.bathrooms,
+                            squareFootage: d.squareFootage,
+                            status: d.status,
+                            county: d.county,
+                            listedDate: d.listedDate,
+                            category: category,
+                            listingType: 'rental'
+                        }
+                    };
+                });
+
+            // Combine both sales and rental features
+            const teacherFirefighterFeatures = [...teacherFirefighterSalesFeatures, ...teacherFirefighterRentalFeatures];
+
+            console.log('Created', teacherFirefighterSalesFeatures.length, 'teacher-firefighter persona sales features');
+            console.log('Created', teacherFirefighterRentalFeatures.length, 'teacher-firefighter persona rental features');
+            console.log('Total teacher-firefighter persona features:', teacherFirefighterFeatures.length);
+
+            // Add source for teacher-firefighter persona
+            map.addSource('persona-teacher-firefighter-source', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: teacherFirefighterFeatures
+                }
+            });
+
+            // Create color expression based on category for teacher-firefighter
+            const teacherFirefighterColorExpression = [
+                'match',
+                ['get', 'category'],
+                'sale-right-sized', '#000000',      // Black: sales 2+ bedrooms
+                'sale-too-small', '#cccccc',        // Light grey: sales < 2 bedrooms
+                'rental-right-sized', '#dc2626',    // Red: rentals 2+ bedrooms
+                'rental-too-small', '#cccccc',      // Grey: rentals < 2 bedrooms
+                '#cccccc'                           // Default - light grey
+            ];
+
+            // Add layer for teacher-firefighter persona
+            map.addLayer({
+                id: 'persona-teacher-firefighter',
+                type: 'circle',
+                source: 'persona-teacher-firefighter-source',
+                paint: {
+                    'circle-radius': 4,
+                    'circle-color': teacherFirefighterColorExpression,
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#ffffff',
+                    'circle-opacity': 0.8
+                },
+                layout: {
+                    visibility: 'none',
+                    'circle-sort-key': [
+                        'match',
+                        ['get', 'category'],
+                        'sale-right-sized', 4,      // Draw black sales last (on top)
+                        'rental-right-sized', 3,    // Draw red rentals second
+                        'sale-too-small', 2,        // Draw grey sales third
+                        'rental-too-small', 1,      // Draw grey rentals first (below)
+                        1                           // Default
+                    ]
+                }
+            }, firstSymbolId);
+
+            console.log('Added teacher-firefighter persona layer with category-based colors');
         })
         .catch(error => console.error('Error loading sales listings:', error));
 
@@ -1707,16 +1915,16 @@
                             0, 1,
                             15, 3
                         ],
-                        // Color ramp for heatmap - viridis-style purple to teal
+                        // Color ramp for heatmap - blue (low) to red (high)
                         'heatmap-color': [
                             'interpolate',
                             ['linear'],
                             ['heatmap-density'],
                             0, 'rgba(33,102,172,0)',
-                            0.2, '#ebe8fd',
-                            0.5, '#ddb6db',
-                            0.7, '#8795eb',
-                            0.99, '#3445b0',
+                            0.2, '#ddb6db',
+                            0.4, '#ebe8fd',
+                            0.6, '#8795eb',
+                            0.8, '#3445b0',
                             1, '#091a3f'
                         ],
                         // Increase radius as zoom increases
@@ -1724,8 +1932,8 @@
                             'interpolate',
                             ['linear'],
                             ['zoom'],
-                            0, 10,
-                            15, 50
+                            0, 2,
+                            15, 20
                         ],
                         // Decrease opacity at higher zoom levels
                         'heatmap-opacity': [
@@ -1765,16 +1973,16 @@
                             0, 1,
                             15, 3
                         ],
-                        // Color ramp for heatmap - viridis-style purple to teal
+                        // Color ramp for heatmap - blue (low) to red (high)
                         'heatmap-color': [
                             'interpolate',
                             ['linear'],
                             ['heatmap-density'],
                             0, 'rgba(33,102,172,0)',
-                            0.2, '#ebe8fd',
-                            0.5, '#ddb6db',
-                            0.7, '#8795eb',
-                            0.99, '#3445b0',
+                            0.2, '#ddb6db',
+                            0.4, '#ebe8fd',
+                            0.6, '#8795eb',
+                            0.8, '#3445b0',
                             1, '#091a3f'
                         ],
                         // Increase radius as zoom increases
@@ -1782,8 +1990,8 @@
                             'interpolate',
                             ['linear'],
                             ['zoom'],
-                            0, 10,
-                            15, 50
+                            0, 2,
+                            15, 20
                         ],
                         // Decrease opacity at higher zoom levels
                         'heatmap-opacity': [
@@ -1823,16 +2031,16 @@
                             0, 1,
                             15, 3
                         ],
-                        // Color ramp for heatmap - viridis-style purple to teal
+                        // Color ramp for heatmap - blue (low) to red (high)
                         'heatmap-color': [
                             'interpolate',
                             ['linear'],
                             ['heatmap-density'],
                             0, 'rgba(33,102,172,0)',
-                            0.2, '#ebe8fd',
-                            0.5, '#ddb6db',
-                            0.7, '#8795eb',
-                            0.99, '#3445b0',
+                            0.2, '#ddb6db',
+                            0.4, '#ebe8fd',
+                            0.6, '#8795eb',
+                            0.8, '#3445b0',
                             1, '#091a3f'
                         ],
                         // Increase radius as zoom increases
@@ -1840,8 +2048,8 @@
                             'interpolate',
                             ['linear'],
                             ['zoom'],
-                            0, 10,
-                            15, 50
+                            0, 2,
+                            15, 20
                         ],
                         // Decrease opacity at higher zoom levels
                         'heatmap-opacity': [
@@ -1912,6 +2120,35 @@
                     console.warn('No tracts found for state FIPS', stateFIPS);
                     console.warn('Available fields in first record:', Object.keys(data[0]));
                 }
+
+                // Load commute data CSV and merge with tract data
+                fetch('census_tract_commute_data.csv')
+                    .then(response => response.text())
+                    .then(csvText => {
+                        // Parse CSV
+                        const lines = csvText.trim().split('\n');
+                        const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+                        const commuteData = {};
+
+                        for (let i = 1; i < lines.length; i++) {
+                            const values = lines[i].split(',').map(v => v.replace(/"/g, ''));
+                            const geoid = values[0];
+                            commuteData[geoid] = {
+                                ShCommute45OrLess: parseFloat(values[3])
+                            };
+                        }
+
+                        // Merge commute data with tract data
+                        // Invert the value to show share with commute LONGER than 45 minutes
+                        tractData.forEach(tract => {
+                            if (commuteData[tract.geoid]) {
+                                tract.sh_commute_45_or_less = 1 - (commuteData[tract.geoid].ShCommute45OrLess / 100); // Convert to decimal and invert
+                            }
+                        });
+
+                        console.log('Loaded and merged commute data for', Object.keys(commuteData).length, 'tracts');
+                    })
+                    .catch(error => console.error('Error loading commute data:', error));
             })
             .catch(error => {
                 console.error('Error loading tract data:', error);
@@ -2195,6 +2432,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
             currentDataLayer = null;
             currentLayerName = null; // Clear stored layer name
             // Hide tract outline when no data layer is selected
@@ -2236,6 +2474,9 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
             return;
         }
 
@@ -2271,6 +2512,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'submarkets';
@@ -2327,6 +2569,9 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
 
             // Show legend for sales listings
             updateSalesListingsLegend();
@@ -2335,6 +2580,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'sales-listings';
@@ -2394,6 +2640,9 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
 
             // Show legend for rental listings
             updateRentalListingsLegend();
@@ -2402,6 +2651,7 @@
             document.getElementById('rental-legend').classList.remove('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'rental-listings';
@@ -2437,7 +2687,10 @@
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'visible');
             }
 
-            // Ensure municipalities layer is above heatmap (move to top of data layers)
+            // Ensure overlay layers are above heatmap (move to top of data layers)
+            if (map.getLayer('counties-outline')) {
+                map.moveLayer('counties-outline');
+            }
             if (map.getLayer('municipalities-outline')) {
                 map.moveLayer('municipalities-outline');
             }
@@ -2455,6 +2708,9 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
             // Hide the other jobs heatmaps
             if (map.getLayer('jobs-heatmap-cns15')) {
                 map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
@@ -2469,6 +2725,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'jobs-heatmap';
@@ -2501,7 +2758,10 @@
                 map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'visible');
             }
 
-            // Ensure municipalities layer is above heatmap (move to top of data layers)
+            // Ensure overlay layers are above heatmap (move to top of data layers)
+            if (map.getLayer('counties-outline')) {
+                map.moveLayer('counties-outline');
+            }
             if (map.getLayer('municipalities-outline')) {
                 map.moveLayer('municipalities-outline');
             }
@@ -2519,6 +2779,9 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
             // Hide the other jobs heatmaps
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
@@ -2533,6 +2796,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'jobs-heatmap-cns15';
@@ -2565,7 +2829,10 @@
                 map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'visible');
             }
 
-            // Ensure municipalities layer is above heatmap (move to top of data layers)
+            // Ensure overlay layers are above heatmap (move to top of data layers)
+            if (map.getLayer('counties-outline')) {
+                map.moveLayer('counties-outline');
+            }
             if (map.getLayer('municipalities-outline')) {
                 map.moveLayer('municipalities-outline');
             }
@@ -2583,6 +2850,9 @@
             if (map.getLayer('persona-teacher')) {
                 map.setLayoutProperty('persona-teacher', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
             // Hide the other jobs heatmaps
             if (map.getLayer('jobs-heatmap')) {
                 map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
@@ -2597,6 +2867,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'jobs-heatmap-cns16';
@@ -2650,6 +2921,12 @@
             if (map.getLayer('jobs-heatmap-cns16')) {
                 map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher')) {
+                map.setLayoutProperty('persona-teacher', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
 
             // Show legend for nurse persona
             updateNursePersonaLegend();
@@ -2658,6 +2935,7 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.remove('hidden');
             document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'persona-nurse';
@@ -2717,6 +2995,9 @@
             if (map.getLayer('persona-nurse')) {
                 map.setLayoutProperty('persona-nurse', 'visibility', 'none');
             }
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
+            }
 
             // Show legend for teacher persona
             updateTeacherPersonaLegend();
@@ -2725,12 +3006,84 @@
             document.getElementById('rental-legend').classList.add('hidden');
             document.getElementById('nurse-legend').classList.add('hidden');
             document.getElementById('teacher-legend').classList.remove('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.add('hidden');
 
             // Store current layer
             currentDataLayer = 'persona-teacher';
 
             // Update "About this layer" section
             updateAboutLayer('persona-teacher');
+
+            return;
+        }
+
+        // Handle persona-teacher-firefighter layer
+        if (layerType === 'persona-teacher-firefighter') {
+            // Hide tract and zip outlines
+            if (map.getLayer('tracts-outline')) {
+                map.setLayoutProperty('tracts-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('zipcodes-outline')) {
+                map.setLayoutProperty('zipcodes-outline', 'visibility', 'none');
+            }
+            // Hide submarkets
+            if (map.getLayer('submarkets-fill')) {
+                map.setLayoutProperty('submarkets-fill', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-outline')) {
+                map.setLayoutProperty('submarkets-outline', 'visibility', 'none');
+            }
+            if (map.getLayer('submarkets-labels')) {
+                map.setLayoutProperty('submarkets-labels', 'visibility', 'none');
+            }
+
+            // Show teacher-firefighter persona layer
+            if (map.getLayer('persona-teacher-firefighter')) {
+                map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'visible');
+            }
+
+            // Ensure municipalities layer stays on top
+            if (map.getLayer('municipalities-outline')) {
+                map.moveLayer('municipalities-outline');
+            }
+
+            // Hide other layers
+            if (map.getLayer('sales-listings')) {
+                map.setLayoutProperty('sales-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('rental-listings')) {
+                map.setLayoutProperty('rental-listings', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap')) {
+                map.setLayoutProperty('jobs-heatmap', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns15')) {
+                map.setLayoutProperty('jobs-heatmap-cns15', 'visibility', 'none');
+            }
+            if (map.getLayer('jobs-heatmap-cns16')) {
+                map.setLayoutProperty('jobs-heatmap-cns16', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-nurse')) {
+                map.setLayoutProperty('persona-nurse', 'visibility', 'none');
+            }
+            if (map.getLayer('persona-teacher')) {
+                map.setLayoutProperty('persona-teacher', 'visibility', 'none');
+            }
+
+            // Show legend for teacher-firefighter persona
+            updateTeacherFirefighterPersonaLegend();
+            document.getElementById('legend').classList.add('hidden');
+            document.getElementById('sales-legend').classList.add('hidden');
+            document.getElementById('rental-legend').classList.add('hidden');
+            document.getElementById('nurse-legend').classList.add('hidden');
+            document.getElementById('teacher-legend').classList.add('hidden');
+            document.getElementById('teacher-firefighter-legend').classList.remove('hidden');
+
+            // Store current layer
+            currentDataLayer = 'persona-teacher-firefighter';
+
+            // Update "About this layer" section
+            updateAboutLayer('persona-teacher-firefighter');
 
             return;
         }
@@ -2772,6 +3125,9 @@
         }
         if (map.getLayer('persona-teacher')) {
             map.setLayoutProperty('persona-teacher', 'visibility', 'none');
+        }
+        if (map.getLayer('persona-teacher-firefighter')) {
+            map.setLayoutProperty('persona-teacher-firefighter', 'visibility', 'none');
         }
 
         // Show/hide tract outline based on layer type
@@ -3074,6 +3430,7 @@
         document.getElementById('rental-legend').classList.add('hidden');
         document.getElementById('nurse-legend').classList.add('hidden');
         document.getElementById('teacher-legend').classList.add('hidden');
+        document.getElementById('teacher-firefighter-legend').classList.add('hidden');
     }
 
     // Update layer description section
@@ -3194,6 +3551,35 @@
             { color: '#000000', label: 'For-sale: Right-sized (1-2 bedrooms)' },
             { color: '#dc2626', label: 'Rental: Right-sized (1-2 bedrooms)' },
             { color: '#cccccc', label: 'Too-large (3+ bedrooms)' }
+        ];
+
+        categories.forEach(cat => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex items-center gap-2 mb-2';
+
+            const colorBox = document.createElement('div');
+            colorBox.className = 'w-4 h-4 rounded-full border border-gray-300 flex-shrink-0';
+            colorBox.style.backgroundColor = cat.color;
+
+            const label = document.createElement('span');
+            label.className = 'text-xs';
+            label.textContent = cat.label;
+
+            itemDiv.appendChild(colorBox);
+            itemDiv.appendChild(label);
+            legendContent.appendChild(itemDiv);
+        });
+    }
+
+    // Update teacher-firefighter persona legend
+    function updateTeacherFirefighterPersonaLegend() {
+        const legendContent = document.getElementById('teacher-firefighter-legend-content');
+        legendContent.innerHTML = '';
+
+        const categories = [
+            { color: '#000000', label: 'For-sale: Right-sized (2+ bedrooms)' },
+            { color: '#dc2626', label: 'Rental: Right-sized (2+ bedrooms)' },
+            { color: '#cccccc', label: 'Too-small (< 2 bedrooms)' }
         ];
 
         categories.forEach(cat => {
@@ -3767,11 +4153,11 @@
                                 ['linear'],
                                 ['heatmap-density'],
                                 0, 'rgba(33,102,172,0)',
-                                0.2, 'rgb(103,169,207)',
-                                0.4, 'rgb(209,229,240)',
-                                0.6, 'rgb(253,219,199)',
-                                0.8, 'rgb(239,138,98)',
-                                1, 'rgb(178,24,43)'
+                                0.2, '#ddb6db',
+                                0.4, '#ebe8fd',
+                                0.6, '#8795eb',
+                                0.8, '#3445b0',
+                                1, '#091a3f'
                             ],
                             // Increase radius as zoom increases
                             'heatmap-radius': [
@@ -4012,7 +4398,7 @@
             updateDataLayer(null, null);
             // Reset to "Select data layer"
             layerSelect.value = '';
-        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-heatmap' || selectedValue === 'jobs-heatmap-cns15' || selectedValue === 'jobs-heatmap-cns16' || selectedValue === 'persona-nurse' || selectedValue === 'persona-teacher') {
+        } else if (selectedValue === 'submarkets' || selectedValue === 'sales-listings' || selectedValue === 'rental-listings' || selectedValue === 'jobs-heatmap' || selectedValue === 'jobs-heatmap-cns15' || selectedValue === 'jobs-heatmap-cns16' || selectedValue === 'persona-nurse' || selectedValue === 'persona-teacher' || selectedValue === 'persona-teacher-firefighter') {
             // Handle non-quantile layers (no attribute split needed)
             const selectedOption = e.target.options[e.target.selectedIndex];
             currentLayerName = selectedOption.text;
@@ -4138,7 +4524,7 @@
                 const value = dataInfo[attribute];
                 let formattedValue, caption;
 
-                if (attribute.includes('pct') || attribute.includes('_rt_') || attribute.includes('rate') || attribute.includes('change')) {
+                if (attribute.includes('pct') || attribute.includes('_rt_') || attribute.includes('rate') || attribute.includes('change') || attribute === 'sh_commute_45_or_less') {
                     formattedValue = Math.round(value * 100) + '%';
                 } else if (attribute.includes('income') || attribute.includes('zhvi')) {
                     formattedValue = '$' + (Math.round(value / 100) * 100).toLocaleString();
@@ -4171,6 +4557,9 @@
                         break;
                     case 'total_hh_23':
                         caption = `${formattedValue} total households.`;
+                        break;
+                    case 'sh_commute_45_or_less':
+                        caption = `${formattedValue} of workers have a commute longer than 45 minutes.`;
                         break;
                     case 'zhvi_20':
                         caption = `Typical home value in 2020 was ${formattedValue}.`;
@@ -4462,6 +4851,56 @@
     });
 
     map.on('mouseleave', 'persona-teacher', function() {
+        map.getCanvas().style.cursor = '';
+    });
+
+    // Add click handler for teacher-firefighter persona
+    map.on('click', 'persona-teacher-firefighter', function(e) {
+        const props = e.features[0].properties;
+        const isRental = props.listingType === 'rental';
+        const priceFormatted = props.price && props.price !== 'NA' ? '$' + parseInt(props.price).toLocaleString() : 'N/A';
+        const bedroomsText = props.bedrooms && props.bedrooms !== 'NA' ? props.bedrooms : 'N/A';
+        const bathroomsText = props.bathrooms && props.bathrooms !== 'NA' ? props.bathrooms : 'N/A';
+        const sqftText = props.squareFootage && props.squareFootage !== 'NA' ? parseInt(props.squareFootage).toLocaleString() + ' sq ft' : 'N/A';
+
+        // Format listed date
+        let listedDateText = 'N/A';
+        if (props.listedDate && props.listedDate !== 'NA') {
+            try {
+                const date = new Date(props.listedDate);
+                if (!isNaN(date.getTime())) {
+                    listedDateText = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                }
+            } catch (e) {
+                listedDateText = 'N/A';
+            }
+        }
+
+        const headerText = isRental ? 'Teacher-firefighter persona: Rental listing' : 'Teacher-firefighter persona: For-sale listing';
+        const priceLabel = isRental ? 'Monthly rent:' : 'Price:';
+
+        new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div class="popup-content">
+                    <div class="popup-header">${headerText}</div>
+                    <p><strong>Address:</strong> ${props.address || 'N/A'}</p>
+                    <p><strong>${priceLabel}</strong> ${priceFormatted}</p>
+                    <p><strong>Listed:</strong> ${listedDateText}</p>
+                    <p><strong>Type:</strong> ${props.propertyType || 'N/A'}</p>
+                    <p><strong>Bedrooms:</strong> ${bedroomsText}</p>
+                    <p><strong>Bathrooms:</strong> ${bathroomsText}</p>
+                    <p><strong>Size:</strong> ${sqftText}</p>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    map.on('mouseenter', 'persona-teacher-firefighter', function() {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'persona-teacher-firefighter', function() {
         map.getCanvas().style.cursor = '';
     });
 
